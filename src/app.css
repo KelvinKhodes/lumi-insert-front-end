@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply font-sans text-ink;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply m-0;
+  }
+
+  /* visible keyboard focus, macOS-style blue focus ring */
+  :focus-visible {
+    outline: 2px solid theme('colors.accent.DEFAULT');
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: theme('colors.accent.soft');
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* the floating "app window" shell used across every page */
+  .app-window {
+    @apply bg-surface dark:bg-dark-surface rounded-sf shadow-window overflow-hidden;
+  }
+
+  .sf-card {
+    @apply bg-surface dark:bg-dark-surface border border-hairline dark:border-dark-hairline rounded-sf shadow-card;
+  }
+
+  .sf-btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-control bg-accent px-4 py-2
+           text-sm font-medium text-white transition-colors duration-150
+           hover:bg-accent-hover active:opacity-80
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .sf-btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-control bg-black/[0.04] dark:bg-white/[0.08] px-4 py-2
+           text-sm font-medium text-ink dark:text-white transition-colors duration-150
+           hover:bg-black/[0.07] dark:hover:bg-white/[0.13] active:opacity-70
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .sf-input {
+    @apply w-full rounded-control border border-hairline dark:border-dark-hairline bg-surface-muted dark:bg-dark-surface-muted
+           px-3 py-2 text-sm text-ink placeholder:text-ink-tertiary
+           focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent
+           transition-shadow duration-150;
+  }
+}

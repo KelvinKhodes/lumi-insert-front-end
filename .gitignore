@@ -1,0 +1,44 @@
+node_modules/
+.env
+
+# pnpm / node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite / build outputs
+dist/
+build/
+.vite/
+.svelte-kit/
+
+# Cache
+.cache/
+coverage/
+/.turbo/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Optional npm artifacts
+*.tgz
+*.lock-wscript
+
+# TypeScript
+*.tsbuildinfo
+
+# Local env files
+.env.local
+.env.*.local
+
+
