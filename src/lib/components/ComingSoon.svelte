@@ -2,7 +2,13 @@
   import { Hammer } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
 
-  export let title = 'Coming soon';
+  /**
+   * @typedef {Object} Props
+   * @property {string} [title]
+   */
+
+  /** @type {Props} */
+  let { title = 'Coming soon' } = $props();
   pageTitle.set(title);
 </script>
 

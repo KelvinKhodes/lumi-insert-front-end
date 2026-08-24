@@ -9,7 +9,7 @@
   pageTitle.set('New transaction');
 
   const creating = useAsyncAction(createTransaction);
-  let customer = null;
+  let customer = $state(null);
 
   async function onStart() {
     if (!customer) return;
@@ -23,7 +23,7 @@
 </script>
 
 <div class="flex min-h-full flex-col items-center justify-center p-5 md:p-7">
-  <button class="absolute left-5 top-5 flex items-center gap-1 text-[13px] text-ink-secondary hover:text-ink md:left-7 md:top-7" on:click={() => navigate('/transactions')}>
+  <button class="absolute left-5 top-5 flex items-center gap-1 text-[13px] text-ink-secondary hover:text-ink md:left-7 md:top-7" onclick={() => navigate('/transactions')}>
     <ArrowLeft size={14} />Back to transactions
   </button>
 
@@ -40,7 +40,7 @@
 
     <CustomerPicker onSelect={(c) => (customer = c)} />
 
-    <button class="sf-btn-primary mt-4 w-full" on:click={onStart} disabled={!customer || $creating.loading}>
+    <button class="sf-btn-primary mt-4 w-full" onclick={onStart} disabled={!customer || $creating.loading}>
       {#if $creating.loading}
         <LoaderCircle size={14} class="animate-spin" />
       {:else}

@@ -17,9 +17,15 @@
   import { session, clearSession } from '../stores/session.js';
   import { logout } from '../api/auth.js';
 
-  /** Whether the mobile slide-over is open. Ignored on md+ where the sidebar is always visible. */
-  export let open = false;
-  export let onClose = () => {};
+  
+  /**
+   * @typedef {Object} Props
+   * @property {boolean} [open] - Whether the mobile slide-over is open. Ignored on md+ where the sidebar is always visible.
+   * @property {any} [onClose]
+   */
+
+  /** @type {Props} */
+  let { open = false, onClose = () => {} } = $props();
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -59,7 +65,7 @@
   <button
     aria-label="Close navigation"
     class="fixed inset-0 z-40 bg-black/30 md:hidden"
-    on:click={onClose}
+    onclick={onClose}
   ></button>
 {/if}
 
@@ -70,10 +76,12 @@
   <div class="flex h-full flex-col border-r border-hairline p-3">
     <div class="flex items-center justify-between px-1 pb-4 pt-1">
       <div class="flex items-center gap-2">
-        <div class="h-6 w-6 rounded-[7px] bg-accent"></div>
+        <div class="h-6 w-6 rounded-[7px]">
+          <img class="h-full w-full object-contain drop-shadow-[0_0px_0px_rgba(0,0,0,6)]" src="src/lib/assets/LUMI INSERT Logo.png" alt="Lumi Insert Logo">
+        </div>
         <span class="text-[14px] font-semibold text-ink">Lumi Insert</span>
       </div>
-      <button class="rounded-control p-1 text-ink-secondary hover:bg-black/[0.05] md:hidden" on:click={onClose} aria-label="Close">
+      <button class="rounded-control p-1 text-ink-secondary hover:bg-black/[0.05] md:hidden" onclick={onClose} aria-label="Close">
         <X size={16} />
       </button>
     </div>
@@ -81,7 +89,7 @@
     <nav class="flex flex-1 flex-col gap-0.5 overflow-y-auto">
       {#each navItems as item}
         <Link to={item.href} getProps={linkProps} on:click={onClose}>
-          <svelte:component this={item.icon} size={16} strokeWidth={2} />
+          <item.icon size={16} strokeWidth={2} />
           {item.label}
         </Link>
       {/each}
@@ -98,7 +106,7 @@
         </div>
         <button
           class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger"
-          on:click={handleLogout}
+          onclick={handleLogout}
           aria-label="Log out"
         >
           <LogOut size={15} />

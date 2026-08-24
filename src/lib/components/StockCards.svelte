@@ -10,10 +10,10 @@
 
   const stockCards = useAsyncAction(searchStockCards);
 
-  let typeFilter = '';
-  let page = 0;
+  let typeFilter = $state('');
+  let page = $state(0);
   const size = 15;
-  let modalOpen = false;
+  let modalOpen = $state(false);
 
   const typeStyle = {
     CUSTOMER_IN: 'bg-success-soft text-success',
@@ -47,7 +47,7 @@
   <div class="mb-5 flex items-center justify-between gap-3">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Stock cards</h1>
     <div class="ml-auto flex items-center gap-2">
-      <select class="sf-input w-auto max-w-[170px]" bind:value={typeFilter} on:change={onTypeChange}>
+      <select class="sf-input w-auto max-w-[170px]" bind:value={typeFilter} onchange={onTypeChange}>
         <option value="">All types</option>
         <option value="CUSTOMER_IN">Customer in</option>
         <option value="CUSTOMER_OUT">Customer out</option>
@@ -56,7 +56,7 @@
         <option value="DEFECT">Defect</option>
         <option value="REPAIRED">Repaired</option>
       </select>
-      <button class="sf-btn-primary shrink-0" on:click={() => (modalOpen = true)}>
+      <button class="sf-btn-primary shrink-0" onclick={() => (modalOpen = true)}>
         <Plus size={14} />New
       </button>
     </div>
@@ -95,8 +95,8 @@
     <div class="mt-4 flex items-center justify-between">
       <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
       <div class="flex gap-2">
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(-1)} disabled={page === 0}>Prev</button>
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(1)} disabled={($stockCards.data.content?.length ?? 0) < size}>Next</button>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={page === 0}>Prev</button>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(1)} disabled={($stockCards.data.content?.length ?? 0) < size}>Next</button>
       </div>
     </div>
   {/if}
