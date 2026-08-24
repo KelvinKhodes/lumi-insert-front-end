@@ -5,16 +5,18 @@
   import { getEmployees } from '../api/employees.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import EmployeeFormModal from './EmployeeFormModal.svelte';
+    import { action, allowed } from '../permission.js';
+    import { session } from '../stores/session.js';
 
   pageTitle.set('Employees');
 
   const employees = useAsyncAction(getEmployees);
 
-  let page = 0;
+  let page = $state(0);
   const size = 12;
 
-  let modalOpen = false;
-  let editingEmployeeId = null;
+  let modalOpen = $state(false);
+  let editingEmployeeId = $state(null);
 
   const roleStyle = {
     FINANCE: 'bg-info-soft text-info',
@@ -47,9 +49,11 @@
 <div class="p-5 md:p-7">
   <div class="mb-5 flex items-center justify-between">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Employees</h1>
-    <button class="sf-btn-primary ml-auto" on:click={openCreate}>
+    {#if allowed($session?.employee?.role, action.EmployeesWrite)}
+    <button class="sf-btn-primary ml-auto" onclick={openCreate}>
       <Plus size={14} />New employee
     </button>
+    {/if}
   </div>
 
   {#if $employees.loading}
@@ -69,7 +73,8 @@
           <li>
             <button
               class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-black/[0.015]"
-              on:click={() => openEdit(employee.id)}
+              disabled={!allowed($session?.employee?.role, action.EmployeesWrite)}
+              onclick={() => openEdit(employee.id)}
             >
               <div class="flex min-w-0 items-center gap-3">
                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
@@ -95,10 +100,10 @@
     <div class="mt-4 flex items-center justify-between">
       <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
       <div class="flex gap-2">
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(-1)} disabled={$employees.data.first}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$employees.data.first}>
           <ChevronLeft size={14} />
         </button>
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(1)} disabled={$employees.data.last}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(1)} disabled={$employees.data.last}>
           <ChevronRight size={14} />
         </button>
       </div>
