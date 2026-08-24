@@ -96,3 +96,15 @@ export async function exportProductsStatistics(params) {
     responseType: 'blob'
   });
 }
+
+  /**
+ * Get product statistics
+ * @param {{ startDate: string, endDate: string }} params ISO date-time strings.
+ * @returns {Promise<{productSales: {productName:string, totalSold: number}[], productRefunds: {productName:string, totalRefunded: number}[]}>}
+ */
+export async function getProductsStatistics(params) {
+  return apiRequest('/api/products/statistics', {
+    method: 'GET',
+    params, 
+  });
+} 
