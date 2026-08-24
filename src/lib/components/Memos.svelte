@@ -1,18 +1,24 @@
 <script>
   import { onMount } from 'svelte';
-  import { Plus, LoaderCircle, TriangleAlert, Archive, Circle } from 'lucide-svelte';
+  import { Plus, LoaderCircle, TriangleAlert, Archive, Circle, Pencil } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getMemos, markMemoAsRead, archiveMemo } from '../api/memos.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import MemoFormModal from './MemoFormModal.svelte';
+  import MemoViewModal from './MemoViewModal.svelte';
+    import { action, allowed } from '../permission.js';
+    import { session } from '../stores/session.js';
 
   pageTitle.set('Memos');
 
   const memos = useAsyncAction(getMemos);
   const archiving = useAsyncAction(archiveMemo);
+   
 
-  let modalOpen = false;
-  let expandedId = null;
+  let modalOpen = $state(false); 
+
+  let editingMemo = null;
+  let memoModalOpen = $state(null);
 
   const roleStyle = {
     OWNER: 'bg-danger-soft text-danger',
@@ -25,12 +31,19 @@
     memos.run({});
   }
 
+  function openEdit(memo, event) { 
+    event.stopPropagation();
+    editingMemo = memo;
+    modalOpen = true; 
+  }
+
   async function onOpenMemo(memo) {
-    expandedId = expandedId === memo.id ? null : memo.id;
+    memoModalOpen = memo;
     if (!memo.isRead) {
       try {
         await markMemoAsRead(memo.id);
-        memo.isRead = true;
+        memo.isRead = true;  
+        memos.reload($memos?.data);
       } catch {
         // silently ignore — read-state is a soft signal, not worth surfacing an error for
       }
@@ -49,7 +62,7 @@
 <div class="p-5 md:p-7">
   <div class="mb-5 flex items-center justify-between">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Memos</h1>
-    <button class="sf-btn-primary ml-auto" on:click={() => (modalOpen = true)}>
+    <button class="sf-btn-primary ml-auto" onclick={() => (modalOpen = true)}>
       <Plus size={14} />New memo
     </button>
   </div>
@@ -67,7 +80,15 @@
   {:else}
     <div class="flex flex-col gap-2.5">
       {#each $memos.data.content as memo (memo.id)}
-        <button class="sf-card block w-full p-4 text-left" on:click={() => onOpenMemo(memo)}>
+        <div role="button" class="sf-card block w-full p-4 text-left" tabindex="0" 
+          onclick={() => onOpenMemo(memo)}
+          onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onOpenMemo(memo);
+            }
+          }}
+        >
           <div class="flex items-start justify-between gap-3">
             <div class="flex min-w-0 items-start gap-2">
               {#if !memo.isRead}
@@ -77,31 +98,39 @@
               {/if}
               <div class="min-w-0">
                 <p class="truncate text-[13.5px] font-medium text-ink">{memo.title}</p>
-                <p class="text-[12.5px] text-ink-secondary" class:line-clamp-1={expandedId !== memo.id}>
+                <p class="text-[12.5px] text-ink-secondary" class:line-clamp-1={true}>
                   {memo.body}
                 </p>
               </div>
             </div>
-            <div class="flex shrink-0 items-center gap-2">
-              {#if memo.role}
-                <span class="rounded-full px-2 py-0.5 text-[11px] font-medium {roleStyle[memo.role] ?? 'bg-black/[0.06] text-ink-secondary'}">
-                  {memo.role}
-                </span>
-              {/if}
+            <div class="flex shrink-0 items-center gap-2"> 
+              <span class="rounded-full px-2 py-0.5 text-[11px] font-medium {roleStyle[memo.role] ?? 'bg-black/[0.06] text-ink-secondary'}">
+                  {memo.role ?? 'All Users'}
+              </span> 
+              <button 
+                class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" 
+                onclick={(e) => openEdit(memo, e)} 
+                aria-label="Edit" >
+                <Pencil size={14} />
+              </button>
+              {#if allowed($session?.employee?.role, action.MemosArchieve)}
               <button
                 class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger"
-                on:click={(e) => onArchive(memo, e)}
+                onclick={(e) => onArchive(memo, e)}
                 disabled={$archiving.loading}
                 aria-label="Archive"
               >
                 <Archive size={14} />
               </button>
+              {/if}
             </div>
           </div>
-        </button>
+        </div>
       {/each}
     </div>
   {/if}
 </div>
 
-<MemoFormModal open={modalOpen} onClose={() => (modalOpen = false)} onSaved={load} />
+<MemoFormModal open={modalOpen} onClose={() => (modalOpen = false, editingMemo = null)} onSaved={load} memo={editingMemo} />
+
+<MemoViewModal open={memoModalOpen !== null} onClose={() => (memoModalOpen = null)} memo={memoModalOpen} />

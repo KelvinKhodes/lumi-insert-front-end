@@ -1,27 +1,50 @@
 <script>
+  import { run, preventDefault } from 'svelte/legacy';
+
   import { LoaderCircle, TriangleAlert } from 'lucide-svelte';
   import Modal from './Modal.svelte';
-  import { createMemo } from '../api/memos.js';
+  import { createMemo, updateMemo } from '../api/memos.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
 
-  export let open = false;
-  export let onClose = () => {};
-  export let onSaved = () => {};
+  /**
+   * @typedef {Object} Props
+   * @property {boolean} [open]
+   * @property {any} [onClose]
+   * @property {any} [onSaved]
+   * @property {any} [memo]
+   */
 
-  const saving = useAsyncAction(createMemo);
+  /** @type {Props} */
+  let {
+    open = false,
+    onClose = () => {},
+    onSaved = () => {},
+    memo = null
+  } = $props();
 
-  let title = '';
-  let body = '';
-  let role = '';
-  let images = null;
+  const saving = useAsyncAction(
+    (payload) => (memo ? updateMemo(memo.id, payload) : createMemo(payload))
+  );
 
-  $: if (open) {
-    title = '';
-    body = '';
-    role = '';
-    images = null;
-    saving.reset();
-  }
+  let title = $state('');
+  let body = $state('');
+  let role = $state('');
+  let images = $state(null);
+
+  let isOpenPrevious = $state(false);
+
+  run(() => {
+    if (open && !isOpenPrevious) {
+      title = memo?.title ?? '';
+      body =  memo?.body ?? '';
+      role =  memo?.role ?? '';
+      images = null;
+      saving.reset();
+      isOpenPrevious = true;
+    } else if (!open) {
+      isOpenPrevious = false;
+    }
+  });
 
   async function onSubmit() {
     try {
@@ -40,7 +63,7 @@
 </script>
 
 <Modal {open} {onClose} title="New memo" maxWidthClass="max-w-[440px]">
-  <form on:submit|preventDefault={onSubmit} class="flex flex-col gap-3.5">
+  <form onsubmit={preventDefault(onSubmit)} class="flex flex-col gap-3.5">
     {#if $saving.error}
       <div class="flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
         <TriangleAlert size={15} class="mt-0.5 shrink-0" />
@@ -69,6 +92,7 @@
       </select>
     </div>
 
+    {#if memo == null}
     <div>
       <label for="m-images" class="mb-1.5 block text-[12.5px] font-medium text-ink-secondary">Attachments (optional)</label>
       <input
@@ -77,12 +101,13 @@
         accept="image/*"
         multiple
         class="sf-input !py-1.5 text-[12px]"
-        on:change={(e) => (images = e.currentTarget.files)}
+        onchange={(e) => (images = e.currentTarget.files)}
       />
     </div>
+    {/if}
 
     <div class="mt-2 flex justify-end gap-2">
-      <button type="button" class="sf-btn-secondary" on:click={onClose}>Cancel</button>
+      <button type="button" class="sf-btn-secondary" onclick={onClose}>Cancel</button>
       <button type="submit" class="sf-btn-primary" disabled={$saving.loading}>
         {#if $saving.loading}
           <LoaderCircle size={14} class="animate-spin" />
