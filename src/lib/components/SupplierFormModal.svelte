@@ -1,31 +1,46 @@
 <script>
+  import { run, preventDefault } from 'svelte/legacy';
+
   import { LoaderCircle, TriangleAlert } from 'lucide-svelte';
   import Modal from './Modal.svelte';
   import { createSupplier, updateSupplier } from '../api/suppliers.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
 
-  /** @type {object|null} pass a supplier to edit, or null to create */
-  export let supplier = null;
-  export let open = false;
-  export let onClose = () => {};
-  export let onSaved = () => {};
+  
+  /**
+   * @typedef {Object} Props
+   * @property {object|null} [supplier]
+   * @property {boolean} [open]
+   * @property {any} [onClose]
+   * @property {any} [onSaved]
+   */
 
-  $: isEdit = !!supplier;
+  /** @type {Props} */
+  let {
+    supplier = null,
+    open = false,
+    onClose = () => {},
+    onSaved = () => {}
+  } = $props();
+
+  let isEdit = $derived(!!supplier);
 
   const saving = useAsyncAction((payload) => (isEdit ? updateSupplier(supplier.id, payload) : createSupplier(payload)));
 
-  let name = '';
-  let email = '';
-  let contact = '';
-  let isActive = true;
+  let name = $state('');
+  let email = $state('');
+  let contact = $state('');
+  let isActive = $state(true);
 
-  $: if (open) {
-    name = supplier?.name ?? '';
-    email = supplier?.email ?? '';
-    contact = supplier?.contact ?? '';
-    isActive = supplier?.isActive ?? true;
-    saving.reset();
-  }
+  run(() => {
+    if (open) {
+      name = supplier?.name ?? '';
+      email = supplier?.email ?? '';
+      contact = supplier?.contact ?? '';
+      isActive = supplier?.isActive ?? true;
+      saving.reset();
+    }
+  });
 
   async function onSubmit() {
     const payload = isEdit ? { name, email, contact, isActive } : { name, email, contact };
@@ -40,7 +55,7 @@
 </script>
 
 <Modal {open} {onClose} title={isEdit ? 'Edit supplier' : 'New supplier'} maxWidthClass="max-w-[400px]">
-  <form on:submit|preventDefault={onSubmit} class="flex flex-col gap-3.5">
+  <form onsubmit={preventDefault(onSubmit)} class="flex flex-col gap-3.5">
     {#if $saving.error}
       <div class="flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
         <TriangleAlert size={15} class="mt-0.5 shrink-0" />
@@ -71,7 +86,7 @@
     {/if}
 
     <div class="mt-2 flex justify-end gap-2">
-      <button type="button" class="sf-btn-secondary" on:click={onClose}>Cancel</button>
+      <button type="button" class="sf-btn-secondary" onclick={onClose}>Cancel</button>
       <button type="submit" class="sf-btn-primary" disabled={$saving.loading}>
         {#if $saving.loading}
           <LoaderCircle size={14} class="animate-spin" />

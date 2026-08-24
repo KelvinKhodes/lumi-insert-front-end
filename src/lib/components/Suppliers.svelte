@@ -1,22 +1,26 @@
 <script>
+  import { preventDefault } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
   import { Plus, Search, LoaderCircle, TriangleAlert, Pencil, ChevronLeft, ChevronRight } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getSuppliers } from '../api/suppliers.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import SupplierFormModal from './SupplierFormModal.svelte';
+    import { action, allowed } from '../permission.js';
+    import { session } from '../stores/session.js';
 
   pageTitle.set('Suppliers');
 
   const suppliers = useAsyncAction(getSuppliers);
 
-  let page = 0;
+  let page = $state(0);
   const size = 10;
-  let nameQuery = '';
-  let isActiveFilter = '';
+  let nameQuery = $state('');
+  let isActiveFilter = $state('');
 
-  let modalOpen = false;
-  let editingSupplier = null;
+  let modalOpen = $state(false);
+  let editingSupplier = $state(null);
 
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
@@ -63,20 +67,22 @@
   <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Suppliers</h1>
 
-    <form on:submit|preventDefault={onSearch} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
+    <form onsubmit={preventDefault(onSearch)} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
       <div class="relative flex-1 md:max-w-[220px]">
         <Search size={14} class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-tertiary" />
         <input class="sf-input pl-8" type="text" placeholder="Search by name" bind:value={nameQuery} />
       </div>
-      <select class="sf-input w-auto max-w-[140px]" bind:value={isActiveFilter} on:change={onStatusChange}>
+      <select class="sf-input w-auto max-w-[140px]" bind:value={isActiveFilter} onchange={onStatusChange}>
         <option value="">All statuses</option>
         <option value="true">Active</option>
         <option value="false">Inactive</option>
       </select>
       <button type="submit" class="sf-btn-secondary shrink-0">Search</button>
-      <button type="button" class="sf-btn-primary shrink-0" on:click={openCreate}>
+      {#if allowed($session?.employee?.role, action.SuppliersWrite)}
+      <button type="button" class="sf-btn-primary shrink-0" onclick={openCreate}>
         <Plus size={14} />New supplier
       </button>
+      {/if}
     </form>
   </div>
 
@@ -112,9 +118,12 @@
               <p class="font-mono font-medium text-danger">{currency.format(supplier.totalUnpaid ?? 0)}</p>
               <p class="text-ink-secondary">Unpaid</p>
             </div>
-            <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" on:click={() => openEdit(supplier)} aria-label="Edit">
+            {#if allowed($session?.employee?.role, action.SuppliersWrite)}
+            <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => openEdit(supplier)} aria-label="Edit">
               <Pencil size={14} />
             </button>
+
+            {/if}
           </div>
         </div>
       {/each}
@@ -123,10 +132,10 @@
     <div class="mt-4 flex items-center justify-between">
       <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
       <div class="flex gap-2">
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(-1)} disabled={$suppliers.data.first}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$suppliers.data.first}>
           <ChevronLeft size={14} />
         </button>
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(1)} disabled={$suppliers.data.last}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(1)} disabled={$suppliers.data.last}>
           <ChevronRight size={14} />
         </button>
       </div>
