@@ -1,7 +1,9 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
-  import { ArrowLeft, LoaderCircle, TriangleAlert, FileDown, Ban, RotateCcw, Wallet, Check, Trash2, PlayCircle } from 'lucide-svelte';
+  import { ArrowLeft, LoaderCircle, TriangleAlert, FileDown, Ban, RotateCcw, Wallet, Check, Trash2, PlayCircle, TicketMinus } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getTransaction, processTransaction, cancelTransaction, exportTransactionPdf } from '../api/transactions.js';
   import {
@@ -11,14 +13,18 @@
     deleteTransactionItem,
     refundTransactionItem
   } from '../api/transactionItems.js';
-  import { getTransactionPayments, createTransactionPayment } from '../api/transactionPayments.js';
+  import { getTransactionPayments, createTransactionPayment, refundTransactionPayment } from '../api/transactionPayments.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import { downloadBlob } from '../utils.js';
   import ProductPicker from './ProductPicker.svelte';
+  import { getProductStock } from '../api/products.js'; 
+    import { action, allowed } from '../permission.js';
+    import { session } from '../stores/session.js';
 
-  export let id;
+  let { id } = $props();
 
   const transaction = useAsyncAction(getTransaction);
+  const productStock = useAsyncAction(getProductStock);
   const items = useAsyncAction(getTransactionItems);
   const payments = useAsyncAction(getTransactionPayments);
   const adding = useAsyncAction(addTransactionItem);
@@ -29,12 +35,15 @@
   const cancelling = useAsyncAction(cancelTransaction);
   const exporting = useAsyncAction(exportTransactionPdf);
   const paying = useAsyncAction(createTransactionPayment);
+  const refundPaying = useAsyncAction(refundTransactionPayment)
 
-  let paymentFrom = '';
-  let paymentTo = '';
-  let paymentAmount = '';
-  let paymentFiles = null;
-  let showPaymentForm = false;
+  let paymentFrom = $state('');
+  let paymentTo = $state('');
+  let paymentAmount = $state('');
+  let paymentFiles = $state(null);
+  let showPaymentForm = $state(false);
+  
+  let productStockData = $state(new Map()); // Map of productId to stock quantity 
 
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
@@ -51,15 +60,28 @@
     payments.run(id, { size: 20 });
   }
 
-  async function onAddItem(product) {
+  async function onAddItem(product) { 
     await adding.run(id, { productId: product.id, quantity: 1 });
     load();
   }
 
-  async function onQuantityChange(item, quantity) {
-    if (Number(quantity) < 1) return;
-    await updatingQty.run(id, item.id, Number(quantity));
-    load();
+  async function onQuantityChange(item, newQuantity) {
+    let quantity = Number(newQuantity);
+    console.log(productStockData);
+    if (quantity < 1) return;
+
+    const stockData = await productStock.run(item.productId);
+    productStockData.set(stockData.id, stockData.stockQuantity);
+    productStockData = productStockData;
+
+    if (quantity > stockData.stockQuantity) quantity = stockData.stockQuantity;
+
+    if (stockData.stockQuantity >= quantity) {
+      await updatingQty.run(id, item.id, quantity);
+      load();
+    } else {
+      return;
+    } 
   }
 
   async function onDeleteItem(item) {
@@ -106,13 +128,31 @@
     }
   }
 
+  async function onSubmitRefundPayment() {
+    if (!paymentFiles?.length) return;
+    try {
+      await refundPaying.run(id, { paymentFrom, paymentTo, totalPayment: Number(paymentAmount), files: Array.from(paymentFiles) });
+      paymentFrom = '';
+      paymentTo = '';
+      paymentAmount = '';
+      paymentFiles = null;
+      showPaymentForm = false;
+      load();
+    } catch {
+      // error state already surfaced via $paying.error below
+    }
+  }
+
   onMount(load);
-  $: pageTitle.set($transaction.data?.invoiceId ? `Transaction · ${$transaction.data.invoiceId}` : 'Transaction');
-  $: isEditable = $transaction.data?.status === 'PENDING';
+  run(() => {
+    pageTitle.set($transaction.data?.invoiceId ? `Transaction · ${$transaction.data.invoiceId}` : 'Transaction');
+  });
+  let isEditable = $derived($transaction.data?.status === 'PENDING');
+  let isCancelable = $derived($transaction.data?.status === 'PROCESS' || $transaction.data?.status === 'COMPLETE');
 </script>
 
 <div class="p-5 md:p-7">
-  <button class="mb-4 flex items-center gap-1 text-[13px] text-ink-secondary hover:text-ink" on:click={() => navigate('/transactions')}>
+  <button class="mb-4 flex items-center gap-1 text-[13px] text-ink-secondary hover:text-ink" onclick={() => navigate('/transactions')}>
     <ArrowLeft size={14} />Back to transactions
   </button>
 
@@ -133,19 +173,24 @@
         <p class="mt-0.5 text-[13px] text-ink-secondary">{t.customerName}</p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <button class="sf-btn-secondary" on:click={onExport} disabled={$exporting.loading}>
+        <button class="sf-btn-secondary" onclick={onExport} disabled={$exporting.loading}>
           {#if $exporting.loading}<LoaderCircle size={14} class="animate-spin" />{:else}<FileDown size={14} />{/if}
           Export PDF
         </button>
+        {#if allowed($session?.employee?.role, action.TransactionsWrite)}
         {#if isEditable}
-          <button class="sf-btn-primary" on:click={onProcess} disabled={$processing.loading || !$items.data?.content?.length}>
+          <button class="sf-btn-primary" onclick={onProcess} disabled={$processing.loading || !$items.data?.content?.length}>
             {#if $processing.loading}<LoaderCircle size={14} class="animate-spin" />{:else}<PlayCircle size={14} />{/if}
             Process
           </button>
-          <button class="sf-btn-secondary text-danger" on:click={onCancel} disabled={$cancelling.loading}>
+        {/if}
+        {#if isCancelable}
+          <button class="sf-btn-secondary text-danger" onclick={onCancel} disabled={$cancelling.loading}>
             <Ban size={14} />Cancel
           </button>
         {/if}
+        {/if}
+        
       </div>
     </div>
 
@@ -165,34 +210,39 @@
           {:else}
             <div class="mt-3 flex flex-col divide-y divide-hairline">
               {#each $items.data.content as item (item.id)}
+              {@const maxStock = productStockData?.get(String(item.productId)) ?? 999}
+
                 <div class="flex items-center justify-between gap-3 py-2.5 text-[13px]">
                   <div class="min-w-0 flex-1">
                     <p class="truncate font-medium text-ink">{item.productName}</p>
                     <p class="text-[11.5px] text-ink-secondary">{currency.format(item.price)}</p>
                   </div>
 
+                  {#if allowed($session?.employee?.role, action.TransactionsWrite)}
                   {#if isEditable}
                     <input
                       class="sf-input w-16 !py-1 text-center text-[12.5px]"
                       type="number"
                       min="1"
                       value={item.quantity}
-                      on:change={(e) => onQuantityChange(item, e.currentTarget.value)}
+                      max={maxStock}
+                      onchange={(e) => onQuantityChange(item, e.currentTarget.value)}
                     />
                   {:else}
-                    <span class="font-mono text-ink-secondary">×{item.quantity}</span>
+                    <span class="font-mono text-ink-secondary {item.quantity < 0 ? "text-red-500" : ""}">×{item.quantity}</span>
                   {/if}
 
-                  <span class="w-24 shrink-0 text-right font-mono text-ink">{currency.format(item.price * item.quantity)}</span>
+                  <span class="w-24 shrink-0 text-right font-mono text-ink {item.quantity < 0 ? "text-red-500" : ""}">{currency.format(item.price * item.quantity)}</span>
 
                   {#if isEditable}
-                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" on:click={() => onDeleteItem(item)} aria-label="Remove">
+                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onDeleteItem(item)} aria-label="Remove">
                       <Trash2 size={14} />
                     </button>
-                  {:else if t.status === 'COMPLETE'}
-                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" on:click={() => onRefundItem(item)} aria-label="Refund">
+                  {:else if (t.status === 'COMPLETE' || t.status === 'PROCESS') && item.quantity > 0}
+                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onRefundItem(item)} aria-label="Refund">
                       <RotateCcw size={14} />
                     </button>
+                  {/if}
                   {/if}
                 </div>
               {/each}
@@ -203,10 +253,12 @@
         <div class="sf-card p-4">
           <div class="mb-3 flex items-center justify-between">
             <h2 class="text-[13.5px] font-semibold text-ink">Payments</h2>
-            {#if t.status !== 'CANCELLED' && t.status !== 'PENDING'}
-              <button class="sf-btn-secondary !py-1.5 !text-[12px]" on:click={() => (showPaymentForm = !showPaymentForm)}>
-                <Wallet size={13} />Record payment
+            {#if allowed($session?.employee?.role, action.TransactionPaymentsWrite)}
+            {#if t.status !== 'PENDING' && (t.totalUnpaid > 0 || t.totalUnrefunded > 0)}
+              <button class="sf-btn-secondary {t.totalUnrefunded > 0 ? "bg-red-600 hover:bg-red-500" : ""} !py-1.5 !text-[12px]" onclick={() => (showPaymentForm = !showPaymentForm)}>
+                <Wallet size={13} />Record {t.totalUnrefunded > 0? "refund" : "payment"}
               </button>
+            {/if}
             {/if}
           </div>
 
@@ -218,8 +270,8 @@
                 <input class="sf-input !py-1.5 text-[12.5px]" type="text" placeholder="To" bind:value={paymentTo} />
               </div>
               <input class="sf-input !py-1.5 text-[12.5px]" type="number" placeholder="Amount" bind:value={paymentAmount} />
-              <input type="file" accept="image/*,application/pdf" multiple class="sf-input !py-1.5 text-[12px]" on:change={(e) => (paymentFiles = e.currentTarget.files)} />
-              <button class="sf-btn-primary !py-1.5" on:click={onSubmitPayment} disabled={$paying.loading}>
+              <input type="file" accept="image/*,application/pdf" multiple class="sf-input !py-1.5 text-[12px]" onchange={(e) => (paymentFiles = e.currentTarget.files)} />
+              <button class="sf-btn-primary !py-1.5" onclick={t.totalUnrefunded > 0? onSubmitRefundPayment : onSubmitPayment} disabled={$paying.loading}>
                 {#if $paying.loading}<LoaderCircle size={13} class="animate-spin" />{:else}<Check size={13} />{/if}
                 Save payment
               </button>
@@ -247,15 +299,15 @@
 
       <div class="sf-card flex flex-col gap-2 p-4 text-[13px]">
         <h2 class="mb-1 text-[13.5px] font-semibold text-ink">Summary</h2>
+        <div class="flex justify-between text-ink-secondary"><span>Total Items</span><span class="font-mono">{t.totalItems}</span></div>
         <div class="flex justify-between text-ink-secondary"><span>Subtotal</span><span class="font-mono">{currency.format(t.subTotal)}</span></div>
         <div class="flex justify-between text-ink-secondary"><span>Fee</span><span class="font-mono">{currency.format(t.totalFee)}</span></div>
         <div class="flex justify-between text-ink-secondary"><span>Discount</span><span class="font-mono">-{currency.format(t.totalDiscount)}</span></div>
         <div class="flex justify-between border-t border-hairline pt-2 font-semibold text-ink"><span>Grand total</span><span class="font-mono">{currency.format(t.grandTotal)}</span></div>
         <div class="mt-2 flex justify-between text-success"><span>Paid</span><span class="font-mono">{currency.format(t.totalPaid)}</span></div>
         <div class="flex justify-between text-danger"><span>Unpaid</span><span class="font-mono">{currency.format(t.totalUnpaid)}</span></div>
-        {#if t.totalRefunded > 0}
-          <div class="flex justify-between text-ink-secondary"><span>Refunded</span><span class="font-mono">{currency.format(t.totalRefunded)}</span></div>
-        {/if}
+        <div class="flex justify-between text-ink-secondary"><span>Refunded</span><span class="font-mono">{currency.format(t.totalRefunded)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Unrefunded</span><span class="font-mono">{currency.format(t.totalUnrefunded)}</span></div>  
       </div>
     </div>
   {/if}
