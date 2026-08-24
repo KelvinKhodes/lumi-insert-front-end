@@ -14,3 +14,12 @@ export function downloadBlob(blob, filename) {
   link.remove();
   URL.revokeObjectURL(url);
 }
+
+export function formatCurrency(amount) {
+  const res = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+  }).format(amount);
+  console.log(res);
+  return res;
+}
