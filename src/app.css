@@ -34,6 +34,22 @@
       scroll-behavior: auto !important;
     }
   }
+ 
+  .embla__viewport {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .embla__container {
+    display: flex;
+    position: relative;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .embla__slide {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
 }
 
 @layer components {
