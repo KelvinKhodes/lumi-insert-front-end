@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  svelte-range-slider-pips@4.1.1:
+    hash: e832782b4a0c393693e52b7fec9b03ebf59cc744a2ccc2b9387baef99e68b965
+    path: patches/svelte-range-slider-pips@4.1.1.patch
+
 importers:
 
   .:
@@ -35,7 +40,7 @@ importers:
         version: 5.56.9
       svelte-range-slider-pips:
         specifier: ^4.1.1
-        version: 4.1.1(svelte@5.56.9)
+        version: 4.1.1(patch_hash=e832782b4a0c393693e52b7fec9b03ebf59cc744a2ccc2b9387baef99e68b965)(svelte@5.56.9)
       tailwindcss:
         specifier: ^3.4.4
         version: 3.4.19
@@ -1467,7 +1472,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte-range-slider-pips@4.1.1(svelte@5.56.9):
+  svelte-range-slider-pips@4.1.1(patch_hash=e832782b4a0c393693e52b7fec9b03ebf59cc744a2ccc2b9387baef99e68b965)(svelte@5.56.9):
     dependencies:
       svelte: 5.56.9
 

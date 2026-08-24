@@ -1,3 +1,5 @@
+@import 'svelte-range-slider-pips/dist/svelte/components/RangeSlider.svelte.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

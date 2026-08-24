@@ -1,0 +1,40 @@
+diff --git a/dist/svelte/components/RangeSlider.svelte b/dist/svelte/components/RangeSlider.svelte
+index e976c0026713427288dc20ff3fd5b9bc81307505..742c2f4923a383a8f8a944b66bc1a6dcf59a1624 100644
+--- a/dist/svelte/components/RangeSlider.svelte
++++ b/dist/svelte/components/RangeSlider.svelte
+@@ -687,7 +687,6 @@ function ariaLabelFormatter(value2, index) {
+    * RangeSlider
+    */
+ 
+-  @layer base {
+     :global(.rangeSlider) {
+       /* light mode (default) */
+       --slider-light-accent: #4a40d4;
+@@ -755,7 +754,6 @@ function ariaLabelFormatter(value2, index) {
+         --slider-fg: var(--slider-dark-fg);
+       }
+     }
+-  }
+ 
+   :global(.rangeSlider) {
+     position: relative;
+diff --git a/src/lib/components/RangeSlider.svelte b/src/lib/components/RangeSlider.svelte
+index fbe45bd44ab2463ee5931f242d3ad6e428b4a461..67f8d8b37d83f43257aa0b6dae42e30d31d0da22 100644
+--- a/src/lib/components/RangeSlider.svelte
++++ b/src/lib/components/RangeSlider.svelte
+@@ -964,7 +964,6 @@
+    * RangeSlider
+    */
+ 
+-  @layer base {
+     :global(.rangeSlider) {
+       /* light mode (default) */
+       --slider-light-accent: #4a40d4;
+@@ -1032,7 +1031,6 @@
+         --slider-fg: var(--slider-dark-fg);
+       }
+     }
+-  }
+ 
+   :global(.rangeSlider) {
+     position: relative;

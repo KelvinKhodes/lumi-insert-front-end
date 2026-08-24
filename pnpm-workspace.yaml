@@ -1,0 +1,2 @@
+patchedDependencies:
+  svelte-range-slider-pips@4.1.1: patches/svelte-range-slider-pips@4.1.1.patch
