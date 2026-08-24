@@ -2,14 +2,21 @@
   import { Search, LoaderCircle } from 'lucide-svelte';
   import { searchProductNames } from '../api/products.js';
 
-  export let onSelect = (/** @type {{id:number,name:string}} */ product) => {};
-  export let placeholder = 'Search a product…';
+  /**
+   * @typedef {Object} Props
+   * @property {any} [onSelect]
+   * @property {string} [placeholder]
+   */
 
-  let query = '';
-  let results = [];
-  let open = false;
-  let loading = false;
+  /** @type {Props} */
+  let { onSelect = (/** @type {{id:number,name:string}} */ product) => {}, placeholder = 'Search a product…', isButtonActiveWhenOutOfStock = false } = $props();
+
+  let query = $state('');
+  let results = $state([]);
+  let open = $state(false);
+  let loading = $state(false); 
   let debounceTimer;
+  
 
   function onInput() {
     open = true;
@@ -31,8 +38,8 @@
     }, 300);
   }
 
-  function pick(product) {
-    onSelect(product);
+  function pick(product) { 
+    onSelect(product); 
     query = product.name;
     open = false;
   }
@@ -46,8 +53,8 @@
       type="text"
       {placeholder}
       bind:value={query}
-      on:input={onInput}
-      on:focus={() => (open = true)}
+      oninput={onInput}
+      onfocus={() => (open = true)}
     />
     {#if loading}
       <LoaderCircle size={14} class="absolute right-2.5 top-1/2 -translate-y-1/2 animate-spin text-ink-tertiary" />
@@ -60,10 +67,11 @@
         <li>
           <button
             type="button"
+            disabled={!product.stockQuantity && !isButtonActiveWhenOutOfStock}
             class="block w-full truncate rounded-[7px] px-2.5 py-1.5 text-left text-[13px] text-ink hover:bg-black/[0.05]"
-            on:click={() => pick(product)}
+            onclick={() => pick(product)}
           >
-            {product.name}
+            {product.name} {product.stockQuantity? "(" + product.stockQuantity + " Remaining)" : " (Out of stock)"}
           </button>
         </li>
       {/each}
@@ -71,6 +79,6 @@
   {/if}
 </div>
 
-<svelte:window on:click={(e) => {
+<svelte:window onclick={(e) => {
   if (open && !e.target.closest('.relative')) open = false;
 }} />

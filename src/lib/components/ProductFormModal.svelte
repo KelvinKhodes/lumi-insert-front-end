@@ -1,38 +1,60 @@
 <script>
+  import { run, preventDefault } from 'svelte/legacy';
+
   import { LoaderCircle, TriangleAlert } from 'lucide-svelte';
   import Modal from './Modal.svelte';
   import { createProduct, updateProduct } from '../api/products.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
 
-  /** @type {object|null} pass a product to edit, or null to create */
-  export let product = null;
-  export let categories = [];
-  export let open = false;
-  export let onClose = () => {};
-  export let onSaved = () => {};
+  
+  /**
+   * @typedef {Object} Props
+   * @property {object|null} [product]
+   * @property {any} [categories]
+   * @property {boolean} [open]
+   * @property {any} [onClose]
+   * @property {any} [onSaved]
+   */
 
-  const saving = useAsyncAction(product ? (payload) => updateProduct(product.id, payload) : createProduct);
+  /** @type {Props} */
+  let {
+    product = null,
+    categories = [],
+    open = false,
+    onClose = () => {},
+    onSaved = () => {}
+  } = $props();
+  
+  const saving = useAsyncAction((payload) => (product ? updateProduct(product.id, payload) : createProduct(payload)));
+ 
+  let name = $state('');
+  let categoryId = $state('');
+  let basePrice = $state('');
+  let sellPrice = $state('');
+  let stockQuantity = $state('');
+  let stockMinimum = $state('');
 
-  let name = '';
-  let categoryId = '';
-  let basePrice = '';
-  let sellPrice = '';
-  let stockQuantity = '';
-  let stockMinimum = '';
+  let isOpenPrevious = $state(false);
 
-  $: isEdit = !!product;
+  let isEdit = $derived(!!product);
 
-  $: if (open) {
-    name = product?.name ?? '';
-    categoryId = product?.category?.id ?? '';
-    basePrice = product?.basePrice ?? '';
-    sellPrice = product?.sellPrice ?? '';
-    stockQuantity = '';
-    stockMinimum = product?.stockMinimum ?? '';
-    saving.reset();
-  }
+  run(() => {
+    if (open && !isOpenPrevious) { 
+        name = product?.name ?? '';
+        categoryId = product?.category?.id ?? '';
+        basePrice = product?.basePrice ?? '';
+        sellPrice = product?.sellPrice ?? '';
+        stockQuantity = '';
+        stockMinimum = product?.stockMinimum ?? '';
+        
+        isOpenPrevious = true;
+        saving.reset();
+    } else if (!open) {
+      isOpenPrevious = false;
+    }
+  });
 
-  async function onSubmit() {
+  async function onSubmit() { 
     const payload = {
       name,
       basePrice: Number(basePrice),
@@ -49,7 +71,7 @@
 </script>
 
 <Modal {open} {onClose} title={isEdit ? 'Edit product' : 'New product'}>
-  <form on:submit|preventDefault={onSubmit} class="flex flex-col gap-3.5">
+  <form onsubmit={preventDefault(onSubmit)} class="flex flex-col gap-3.5">
     {#if $saving.error}
       <div class="flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
         <TriangleAlert size={15} class="mt-0.5 shrink-0" />
@@ -103,7 +125,7 @@
     {/if}
 
     <div class="mt-2 flex justify-end gap-2">
-      <button type="button" class="sf-btn-secondary" on:click={onClose}>Cancel</button>
+      <button type="button" class="sf-btn-secondary" onclick={onClose}>Cancel</button>
       <button type="submit" class="sf-btn-primary" disabled={$saving.loading}>
         {#if $saving.loading}
           <LoaderCircle size={14} class="animate-spin" />

@@ -1,4 +1,6 @@
 <script>
+  import { preventDefault } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
   import {
     Plus,
@@ -8,13 +10,20 @@
     Pencil,
     Power,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Funnel,
+    Images
+
   } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getProductsByFilter, activateProduct, deactivateProduct } from '../api/products.js';
   import { getCategories } from '../api/categories.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import ProductFormModal from './ProductFormModal.svelte';
+  import ProductGalleryModal from './ProductGalleryModal.svelte';
+  import ProductFilterModal from './ProductFilterModal.svelte';
+    import { session } from '../stores/session.js';
+    import { action, allowed } from '../permission.js';
 
   pageTitle.set('Products');
 
@@ -24,57 +33,94 @@
     product.isActive ? deactivateProduct(product.id) : activateProduct(product.id)
   );
 
-  let page = 0;
+  // let page = $state(0);
   const size = 10;
-  let nameQuery = '';
-  let categoryId = '';
-  let sortBy = 'createdAt';
-  let sortDirection = 'DESC';
+  // let nameQuery = $state('');
+  // let categoryId = $state('');
+  // let sortBy =  $state('createdAt');
+  // let sortDirection = $state('DESC');
 
-  let modalOpen = false;
-  let editingProduct = null;
+  let queryPayload = $state({
+    page: 0,
+    nameQuery: '',
+    categoryId: '',
+    sortBy: 'createdAt',
+    sortDirection: 'DESC',
+    minPrice: 0,
+    maxPrice: 50000000
+  });
 
+  let modalOpen = $state(false);
+  let editingProduct = $state(null);
+
+  let modalGalleryOpen = $state(false);
+  let activeProductGallery = $state(null);
+
+  let modalFilterOpen = $state(false);
+   
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
   function load() {
     products.run({
-      page,
+      page: queryPayload.page,
       size,
-      sortBy,
-      sortDirection,
-      name: nameQuery || undefined,
-      categoryId: categoryId || undefined
+      sortBy: queryPayload.sortBy,
+      sortDirection: queryPayload.sortDirection,
+      name: queryPayload.nameQuery || undefined,
+      categoryId: queryPayload.categoryId || undefined,
+      minPrice: queryPayload.minPrice || undefined,
+      maxPrice: queryPayload.maxPrice || undefined
     });
   }
 
   function onSearch() {
-    page = 0;
+    queryPayload.page = 0;
     load();
   }
 
   function onCategoryChange() {
-    page = 0;
+    queryPayload.page = 0;
     load();
   }
 
   function goToPage(delta) {
-    page = Math.max(0, page + delta);
+    queryPayload.page = Math.max(0, queryPayload.page + delta);
     load();
   }
 
-  function openCreate() {
+  function openCreate() { 
     editingProduct = null;
     modalOpen = true;
   }
 
-  function openEdit(product) {
+  function openEdit(product) { 
     editingProduct = product;
-    modalOpen = true;
+    modalOpen = true; 
+  }
+  
+  function onOpenGallery(product) {
+    modalGalleryOpen = true;
+    activeProductGallery = product;
   }
 
-  async function onToggle(product) {
+
+  async function onToggle(product) { 
     await toggling.run(product);
     load();
+  }
+
+  function resetFilters() {
+    queryPayload = {
+      page: 0,
+      nameQuery: '',
+      categoryId: '',
+      sortBy: 'createdAt',
+      sortDirection: 'DESC',
+      minPrice: 0,
+      maxPrice: 50000000
+    };
+    load();
+    modalFilterOpen = false;
   }
 
   onMount(() => {
@@ -87,23 +133,20 @@
   <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Products</h1>
 
-    <form on:submit|preventDefault={onSearch} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
+    <form onsubmit={preventDefault(onSearch)} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
+      <Funnel size={14} role="button" onclick={() => (modalFilterOpen = true)}/>
+
       <div class="relative flex-1 md:max-w-[220px]">
         <Search size={14} class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-tertiary" />
-        <input class="sf-input pl-8" type="text" placeholder="Search products" bind:value={nameQuery} />
+        <input class="sf-input pl-8" type="text" placeholder="Search products" bind:value={queryPayload.nameQuery} />
       </div>
 
-      <select class="sf-input w-auto max-w-[160px]" bind:value={categoryId} on:change={onCategoryChange}>
-        <option value="">All categories</option>
-        {#each $categoriesAction.data?.content ?? [] as category (category.id)}
-          <option value={category.id}>{category.name}</option>
-        {/each}
-      </select>
-
       <button type="submit" class="sf-btn-secondary shrink-0">Search</button>
-      <button type="button" class="sf-btn-primary shrink-0" on:click={openCreate}>
+      {#if allowed($session?.employee?.role, action.ProductsWrite)}
+      <button type="button" class="sf-btn-primary shrink-0" onclick={openCreate}>
         <Plus size={14} />New product
       </button>
+      {/if}
     </form>
   </div>
 
@@ -133,10 +176,10 @@
           </tr>
         </thead>
         <tbody>
-          {#each $products.data.content as product (product.id)}
-            <tr class="border-b border-hairline last:border-0 hover:bg-black/[0.015]">
+          {#each $products.data.content as product (product.id)} 
+            <tr class="border-b border-hairline last:border-0 hover:bg-black/[0.015]" >
               <td class="px-4 py-2.5 font-medium text-ink">{product.name}</td>
-              <td class="px-4 py-2.5 text-ink-secondary">{product.category?.name ?? '—'}</td>
+              <td class="px-4 py-2.5 text-ink-secondary">{product.category?.name + (product.category?.isActive ? '' : ' (Archieved)') ?? '—'}</td>
               <td class="px-4 py-2.5 font-mono text-ink-secondary">{currency.format(product.basePrice)}</td>
               <td class="px-4 py-2.5 font-mono text-ink">{currency.format(product.sellPrice)}</td>
               <td class="px-4 py-2.5">
@@ -151,17 +194,24 @@
               </td>
               <td class="px-4 py-2.5">
                 <div class="flex justify-end gap-1">
-                  <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" on:click={() => openEdit(product)} aria-label="Edit">
+                  {#if product.pictureUrl.length > 0}
+                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => onOpenGallery(product)} aria-label="Images">
+                      <Images size={14} />
+                    </button>
+                  {/if}
+                  {#if allowed($session?.employee?.role, action.ProductsWrite)}
+                  <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => openEdit(product)} aria-label="Edit">
                     <Pencil size={14} />
                   </button>
                   <button
                     class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]"
-                    on:click={() => onToggle(product)}
+                    onclick={() => onToggle(product)}
                     disabled={$toggling.loading}
                     aria-label={product.isActive ? 'Deactivate' : 'Activate'}
                   >
                     <Power size={14} class={product.isActive ? 'text-danger' : 'text-success'} />
                   </button>
+                  {/if}
                 </div>
               </td>
             </tr>
@@ -190,10 +240,10 @@
             </span>
           </div>
           <div class="mt-3 flex gap-2">
-            <button class="sf-btn-secondary flex-1 !py-1.5" on:click={() => openEdit(product)}>
+            <button class="sf-btn-secondary flex-1 !py-1.5" onclick={() => openEdit(product)}>
               <Pencil size={13} />Edit
             </button>
-            <button class="sf-btn-secondary flex-1 !py-1.5" on:click={() => onToggle(product)} disabled={$toggling.loading}>
+            <button class="sf-btn-secondary flex-1 !py-1.5" onclick={() => onToggle(product)} disabled={$toggling.loading}>
               <Power size={13} class={product.isActive ? 'text-danger' : 'text-success'} />
               {product.isActive ? 'Deactivate' : 'Activate'}
             </button>
@@ -203,12 +253,12 @@
     </div>
 
     <div class="mt-4 flex items-center justify-between">
-      <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
+      <span class="text-[12px] text-ink-secondary">Page {queryPayload.page + 1}</span>
       <div class="flex gap-2">
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(-1)} disabled={$products.data.first}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$products.data.first}>
           <ChevronLeft size={14} />
         </button>
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(1)} disabled={$products.data.last}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(1)} disabled={$products.data.last}>
           <ChevronRight size={14} />
         </button>
       </div>
@@ -222,4 +272,19 @@
   categories={$categoriesAction.data?.content ?? []}
   onClose={() => (modalOpen = false)}
   onSaved={load}
+/>
+
+<ProductGalleryModal
+  open={modalGalleryOpen}
+  product={activeProductGallery} 
+  onClose={() => (modalGalleryOpen = false)} 
+/>
+
+<ProductFilterModal
+  open={modalFilterOpen}
+  payload={queryPayload}
+  onClose={() => (modalFilterOpen = false)} 
+  onReset={resetFilters}
+  load={load}
+  categories={$categoriesAction.data?.content ?? []}
 />
