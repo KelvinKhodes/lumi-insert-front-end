@@ -1,53 +1,71 @@
 <script>
+  import { run, preventDefault } from 'svelte/legacy';
+
   import { LoaderCircle, TriangleAlert, ImagePlus, Check } from 'lucide-svelte';
   import Modal from './Modal.svelte';
   import { createCustomer, updateCustomer, getCustomer, uploadCustomerPictures } from '../api/customers.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
 
-  /** @type {string|null} pass a customer id to edit, or null to create */
-  export let customerId = null;
-  export let open = false;
-  export let onClose = () => {};
-  export let onSaved = () => {};
+  
+  /**
+   * @typedef {Object} Props
+   * @property {string|null} [customerId]
+   * @property {boolean} [open]
+   * @property {any} [onClose]
+   * @property {any} [onSaved]
+   */
 
-  $: isEdit = !!customerId;
+  /** @type {Props} */
+  let {
+    customer = null,
+    open = false,
+    onClose = () => {},
+    onSaved = () => {}
+  } = $props();
+
+  let isEdit = $derived(!!customer);
 
   const detail = useAsyncAction(getCustomer);
-  const saving = useAsyncAction((payload) => (isEdit ? updateCustomer(customerId, payload) : createCustomer(payload)));
-  const uploading = useAsyncAction((files) => uploadCustomerPictures(customerId, files));
+  const saving = useAsyncAction((payload) => (isEdit ? updateCustomer(customer.id, payload) : createCustomer(payload)));
+  const uploading = useAsyncAction((files) => uploadCustomerPictures(customer.id, files));
 
-  let name = '';
-  let email = '';
-  let contact = '';
-  let shippingAddress = '';
-  let isActive = true;
-  let pictureFiles = null;
+  let name = $state('');
+  let email = $state('');
+  let contact = $state('');
+  let shippingAddress = $state('');
+  let isActive = $state(true);
+  let pictureFiles = $state(null);
 
-  $: if (open) {
-    saving.reset();
-    uploading.reset();
-    pictureFiles = null;
-    if (isEdit) {
-      detail.run(customerId).then((data) => {
-        name = data.name ?? '';
-        email = data.email ?? '';
-        contact = data.contact ?? '';
-        shippingAddress = data.shippingAddress ?? '';
-        isActive = data.isActive ?? true;
-      });
-    } else {
-      detail.reset();
-      name = '';
-      email = '';
-      contact = '';
-      shippingAddress = '';
-      isActive = true;
+  run(() => {
+    if (open) {
+      saving.reset();
+      uploading.reset();
+      pictureFiles = null;
+      if (isEdit) {
+          name = customer.name ?? '';
+          email = customer.email ?? '';
+          contact = customer.contact ?? '';
+          shippingAddress = customer.shippingAddress ?? '';
+          isActive = customer.isActive ?? true;
+      } else {
+        detail.reset();
+        name = '';
+        email = '';
+        contact = '';
+        shippingAddress = '';
+        isActive = true;
+      }
     }
-  }
+  });
 
   async function onSubmit() {
     const payload = isEdit
-      ? { name, email, contact, shippingAddress, isActive }
+      ? { 
+        name: name == customer.name ? undefined : name, 
+        email: email == customer.email ? undefined : email, 
+        contact: contact == customer.contact ? undefined : contact, 
+        shippingAddress: shippingAddress == customer.shippingAddress ? undefined : shippingAddress, 
+        isActive: isActive === customer.isActive ? undefined : isActive }
       : { name, email, contact, shippingAddress };
     await saving.run(payload);
     onSaved();
@@ -65,7 +83,7 @@
   {#if isEdit && detail.loading}
     <div class="flex justify-center py-10"><LoaderCircle size={20} class="animate-spin text-ink-tertiary" /></div>
   {:else}
-    <form on:submit|preventDefault={onSubmit} class="flex flex-col gap-3.5">
+    <form onsubmit={preventDefault(onSubmit)} class="flex flex-col gap-3.5">
       {#if $saving.error}
         <div class="flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
           <TriangleAlert size={15} class="mt-0.5 shrink-0" />
@@ -119,7 +137,7 @@
       {/if}
 
       <div class="mt-2 flex justify-end gap-2">
-        <button type="button" class="sf-btn-secondary" on:click={onClose}>Cancel</button>
+        <button type="button" class="sf-btn-secondary" onclick={onClose}>Cancel</button>
         <button type="submit" class="sf-btn-primary" disabled={$saving.loading}>
           {#if $saving.loading}
             <LoaderCircle size={14} class="animate-spin" />
@@ -145,9 +163,9 @@
             accept="image/*"
             multiple
             class="sf-input flex-1 !py-1.5 text-[12px]"
-            on:change={(e) => (pictureFiles = e.currentTarget.files)}
+            onchange={(e) => (pictureFiles = e.currentTarget.files)}
           />
-          <button type="button" class="sf-btn-secondary shrink-0" on:click={onUploadPictures} disabled={!pictureFiles?.length || $uploading.loading}>
+          <button type="button" class="sf-btn-secondary shrink-0" onclick={onUploadPictures} disabled={!pictureFiles?.length || $uploading.loading}>
             {#if $uploading.loading}
               <LoaderCircle size={14} class="animate-spin" />
             {:else}

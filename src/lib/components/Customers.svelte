@@ -1,22 +1,27 @@
 <script>
+  import { preventDefault } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
   import { Plus, Search, LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight, ChevronRight as Arrow } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getCustomers } from '../api/customers.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import CustomerFormModal from './CustomerFormModal.svelte';
+  import { Link, navigate } from 'svelte-routing';
+    import { action, allowed } from '../permission.js';
+    import { session } from '../stores/session.js';
 
   pageTitle.set('Customers');
 
   const customers = useAsyncAction(getCustomers);
 
-  let page = 0;
+  let page = $state(0);
   const size = 12;
-  let nameQuery = '';
-  let isActiveFilter = '';
+  let nameQuery = $state('');
+  let isActiveFilter = $state('');
 
-  let modalOpen = false;
-  let editingCustomerId = null;
+  let modalOpen = $state(false);
+  let editingCustomerId = $state(null);
 
   function load() {
     customers.run({
@@ -49,11 +54,6 @@
     modalOpen = true;
   }
 
-  function openEdit(id) {
-    editingCustomerId = id;
-    modalOpen = true;
-  }
-
   onMount(load);
 </script>
 
@@ -61,22 +61,24 @@
   <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Customers</h1>
 
-    <form on:submit|preventDefault={onSearch} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
+    <form onsubmit={preventDefault(onSearch)} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
       <div class="relative flex-1 md:max-w-[220px]">
         <Search size={14} class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-tertiary" />
         <input class="sf-input pl-8" type="text" placeholder="Search by name" bind:value={nameQuery} />
       </div>
 
-      <select class="sf-input w-auto max-w-[140px]" bind:value={isActiveFilter} on:change={onStatusChange}>
+      <select class="sf-input w-auto max-w-[140px]" bind:value={isActiveFilter} onchange={onStatusChange}>
         <option value="">All statuses</option>
         <option value="true">Active</option>
         <option value="false">Inactive</option>
       </select>
 
       <button type="submit" class="sf-btn-secondary shrink-0">Search</button>
-      <button type="button" class="sf-btn-primary shrink-0" on:click={openCreate}>
+      {#if allowed($session?.employee?.role, action.CustomersWrite)}
+      <button type="button" class="sf-btn-primary shrink-0" onclick={openCreate}>
         <Plus size={14} />New customer
       </button>
+      {/if}
     </form>
   </div>
 
@@ -95,10 +97,11 @@
       <ul class="divide-y divide-hairline">
         {#each $customers.data.content as customer (customer.id)}
           <li>
-            <button
+            <Link to={`/customers/${customer.id}`} class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-black/[0.015]">
+            <!-- <button
               class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-black/[0.015]"
-              on:click={() => openEdit(customer.id)}
-            >
+              onclick={() => openEdit(customer.id)}
+            > -->
               <div class="flex min-w-0 items-center gap-3">
                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
                   {customer.name.slice(0, 2).toUpperCase()}
@@ -109,7 +112,8 @@
                 </div>
               </div>
               <Arrow size={15} class="shrink-0 text-ink-tertiary" />
-            </button>
+            <!-- </button> -->
+            </Link>
           </li>
         {/each}
       </ul>
@@ -118,10 +122,10 @@
     <div class="mt-4 flex items-center justify-between">
       <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
       <div class="flex gap-2">
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(-1)} disabled={$customers.data.first}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$customers.data.first}>
           <ChevronLeft size={14} />
         </button>
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(1)} disabled={$customers.data.last}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(1)} disabled={$customers.data.last}>
           <ChevronRight size={14} />
         </button>
       </div>
