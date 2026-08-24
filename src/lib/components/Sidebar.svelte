@@ -12,7 +12,16 @@
     ClipboardList,
     StickyNote,
     LogOut,
-    X
+    X,
+
+    Monitor,
+
+    FileText,
+
+    FileBracesCorner
+
+
+
   } from 'lucide-svelte';
   import { session, clearSession } from '../stores/session.js';
   import { logout } from '../api/auth.js';
@@ -37,8 +46,15 @@
     { href: '/supplies', label: 'Supplies', icon: PackagePlus },
     { href: '/transactions', label: 'Transactions', icon: Receipt },
     { href: '/stock-cards', label: 'Stock cards', icon: ClipboardList },
-    { href: '/memos', label: 'Memos', icon: StickyNote }
+    { href: '/memos', label: 'Memos', icon: StickyNote },
+
   ];
+  const navDeveloperItems = [
+    { href: 'admin.lumi-insert.my.id', label: 'Grafana (Monitoring)', icon: Monitor },
+    { href: '/swagger-ui/index.html', label: 'Swagger (Documentations)', icon: FileText },
+    { href: '/v3/api-docs', label: 'OpenAPI (JSON Docs)', icon: FileBracesCorner }
+  ]
+  
 
   /** svelte-routing Link `getProps` — styles the active route like macOS System Settings. */
   function linkProps({ isCurrent }) {
@@ -73,27 +89,44 @@
   class="fixed inset-y-0 left-0 z-50 w-[230px] shrink-0 -translate-x-full transform bg-sidebar backdrop-blur-sf transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0
     {open ? 'translate-x-0' : ''}"
 >
-  <div class="flex h-full flex-col border-r border-hairline p-3">
-    <div class="flex items-center justify-between px-1 pb-4 pt-1">
-      <div class="flex items-center gap-2">
-        <div class="h-6 w-6 rounded-[7px]">
-          <img class="h-full w-full object-contain drop-shadow-[0_0px_0px_rgba(0,0,0,6)]" src="src/lib/assets/LUMI INSERT Logo.png" alt="Lumi Insert Logo">
+  <div class="flex h-full flex-col border-r border-hairline justify-between p-3">
+    <div>
+      <div class="flex items-center justify-between px-1 pb-4 pt-1">
+        <div class="flex items-center gap-2">
+          <div class="h-6 w-6 rounded-[7px]">
+            <img class="h-full w-full object-contain drop-shadow-[0_0px_0px_rgba(0,0,0,6)]" src="src/lib/assets/LUMI INSERT Logo.png" alt="Lumi Insert Logo">
+          </div>
+          <span class="text-[14px] font-semibold text-ink">Lumi Insert</span>
         </div>
-        <span class="text-[14px] font-semibold text-ink">Lumi Insert</span>
+        <button class="rounded-control p-1 text-ink-secondary hover:bg-black/[0.05] md:hidden" onclick={onClose} aria-label="Close">
+          <X size={16} />
+        </button>
       </div>
-      <button class="rounded-control p-1 text-ink-secondary hover:bg-black/[0.05] md:hidden" onclick={onClose} aria-label="Close">
-        <X size={16} />
-      </button>
-    </div>
 
-    <nav class="flex flex-1 flex-col gap-0.5 overflow-y-auto">
-      {#each navItems as item}
-        <Link to={item.href} getProps={linkProps} on:click={onClose}>
-          <item.icon size={16} strokeWidth={2} />
-          {item.label}
-        </Link>
-      {/each}
-    </nav>
+      <div>
+        <nav class="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+          {#each navItems as item}
+            <Link to={item.href} getProps={linkProps} on:click={onClose}>
+              <item.icon size={16} strokeWidth={2} />
+              {item.label}
+            </Link>
+          {/each}
+        </nav>
+        <nav class="flex flex-1 flex-col gap-0.5 border-t-2 border-gray-200 overflow-y-auto">
+          {#each navDeveloperItems as item}
+            <Link to={item.href} getProps={linkProps} on:click={onClose}>
+              <item.icon size={16} strokeWidth={2} />
+              {item.label}
+            </Link>
+          {/each}
+        </nav>
+      </div>
+    </div>
+    
+    
+    
+
+    
 
     <div class="mt-2 border-t border-hairline pt-3">
       <div class="flex items-center gap-2 rounded-control px-2 py-1.5">
