@@ -17,10 +17,17 @@
   import Transactions from './lib/components/Transactions.svelte';
   import TransactionCreate from './lib/components/TransactionCreate.svelte';
   import TransactionDetail from './lib/components/TransactionDetail.svelte';
+    import CustomerDetail from './lib/components/CustomerDetail.svelte';
 
-  export let url = '';
+  /**
+   * @typedef {Object} Props
+   * @property {string} [url]
+   */
 
-  $: isAuthenticated = !!$session?.accessToken;
+  /** @type {Props} */
+  let { url = '' } = $props();
+
+  let isAuthenticated = $derived(!!$session?.accessToken);
 </script>
 
 <Router {url}>
@@ -32,14 +39,23 @@
       <Route path="/products"><Products /></Route>
       <Route path="/categories"><Categories /></Route>
       <Route path="/customers"><Customers /></Route>
+      <Route path="/customers/:id">
+        {#snippet children({ params })}
+          <CustomerDetail id={params.id} />              
+        {/snippet}
+      </Route>
       <Route path="/employees"><Employees /></Route>
       <Route path="/suppliers"><Suppliers /></Route>
       <Route path="/supplies"><Supplies /></Route>
       <Route path="/supplies/new"><SupplyCreate /></Route>
-      <Route path="/supplies/:id" let:params><SupplyDetail id={params.id} /></Route>
+      <Route path="/supplies/:id" >{#snippet children({ params })}
+                <SupplyDetail id={params.id} />              {/snippet}
+            </Route>
       <Route path="/transactions"><Transactions /></Route>
       <Route path="/transactions/new"><TransactionCreate /></Route>
-      <Route path="/transactions/:id" let:params><TransactionDetail id={params.id} /></Route>
+      <Route path="/transactions/:id" >{#snippet children({ params })}
+                <TransactionDetail id={params.id} />              {/snippet}
+            </Route>
       <Route path="/stock-cards"><StockCards /></Route>
       <Route path="/memos"><Memos /></Route>
     </AppShell>
