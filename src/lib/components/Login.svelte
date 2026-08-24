@@ -1,11 +1,13 @@
 <script>
+  import { preventDefault } from 'svelte/legacy';
+
   import { navigate } from 'svelte-routing';
   import { LoaderCircle, TriangleAlert } from 'lucide-svelte';
   import { login } from '../api/auth.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
 
-  let username = '';
-  let password = '';
+  let username = $state('');
+  let password = $state('');
 
   const signingIn = useAsyncAction(login);
 
@@ -20,11 +22,13 @@
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-canvas p-6 dark:bg-dark-canvas">
-  <form on:submit|preventDefault={onSubmit} class="sf-card w-full max-w-[360px] p-8">
+  <form onsubmit={preventDefault(onSubmit)} class="sf-card w-full max-w-[360px] p-8">
     <div class="mb-6 flex flex-col items-center text-center">
-      <div class="mb-3 h-11 w-11 rounded-[12px] bg-accent"></div>
-      <h1 class="text-[17px] font-semibold text-ink">Sign in to Lumi Insert</h1>
-      <p class="mt-1 text-[13px] text-ink-secondary">Use your employee account</p>
+      <div class="mb-3 h-11 w-11 rounded-[12px]">
+        <img class="h-full w-full object-contain drop-shadow-[0_0px_0px_rgba(0,0,0,6)]" src="src/lib/assets/LUMI INSERT Logo.png" alt="Lumi Insert Logo">
+      </div>
+      <h1 class="text-[17px] font-semibold text-ink">Welcome Back To Lumi Insert!</h1>
+      <p class="mt-1 text-[13px] text-ink-secondary">Ready to make things happen? Let's get started!</p>
     </div>
 
     {#if $signingIn.error}
@@ -43,6 +47,7 @@
         autocomplete="username"
         bind:value={username}
         required
+        placeholder="Enter your username"
       />
     </div>
 
@@ -55,6 +60,7 @@
         autocomplete="current-password"
         bind:value={password}
         required
+        placeholder="Enter your password"
       />
     </div>
 
