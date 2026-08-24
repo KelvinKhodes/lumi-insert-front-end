@@ -11,7 +11,7 @@ import { apiRequest } from './client.js';
  */
 
 /**
- * @param {{ page?: number, size?: number, sortBy?: string, sortDirection?: 'ASC'|'DESC' }} [filters]
+ * @param {{ isArchieved?: boolean, page?: number, size?: number, sortBy?: string, sortDirection?: 'ASC'|'DESC' }} [filters]
  * @returns {Promise<{content: object[], number: number, size: number, first: boolean, last: boolean, empty: boolean, numberOfElements: number}>}
  */
 export async function getCategories(filters = {}) {
