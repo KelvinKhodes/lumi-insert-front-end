@@ -1,30 +1,40 @@
 <script>
+  import { run, preventDefault } from 'svelte/legacy';
+
   import { LoaderCircle, TriangleAlert } from 'lucide-svelte';
   import Modal from './Modal.svelte';
   import ProductPicker from './ProductPicker.svelte';
   import { createStockCard } from '../api/stockcards.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
 
-  export let open = false;
-  export let onClose = () => {};
-  export let onSaved = () => {};
+  /**
+   * @typedef {Object} Props
+   * @property {boolean} [open]
+   * @property {any} [onClose]
+   * @property {any} [onSaved]
+   */
+
+  /** @type {Props} */
+  let { open = false, onClose = () => {}, onSaved = () => {} } = $props();
 
   const saving = useAsyncAction(createStockCard);
 
-  let referenceId = '';
-  let selectedProduct = null;
-  let quantity = '';
-  let type = 'DEFECT';
-  let description = '';
+  let referenceId = $state('');
+  let selectedProduct = $state(null);
+  let quantity = $state('');
+  let type = $state('DEFECT');
+  let description = $state('');
 
-  $: if (open) {
-    referenceId = crypto.randomUUID();
-    selectedProduct = null;
-    quantity = '';
-    type = 'DEFECT';
-    description = '';
-    saving.reset();
-  }
+  run(() => {
+    if (open) {
+      referenceId = '';
+      selectedProduct = null;
+      quantity = '';
+      type = 'DEFECT';
+      description = '';
+      saving.reset();
+    }
+  });
 
   async function onSubmit() {
     if (!selectedProduct) return;
@@ -45,13 +55,18 @@
 </script>
 
 <Modal {open} {onClose} title="New stock card" maxWidthClass="max-w-[420px]">
-  <form on:submit|preventDefault={onSubmit} class="flex flex-col gap-3.5">
+  <form onsubmit={preventDefault(onSubmit)} class="flex flex-col gap-3.5">
     {#if $saving.error}
       <div class="flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
         <TriangleAlert size={15} class="mt-0.5 shrink-0" />
         <span>{$saving.error.message}</span>
       </div>
     {/if}
+
+    <div>
+      <label for="sc-ref-id" class="mb-1.5 block text-[12.5px] font-medium text-ink-secondary">Reference ID</label>
+      <input id="sc-ref-id" class="sf-input" rows="2" bind:value={referenceId} required/>
+    </div>
 
     <div>
       <label class="mb-1.5 block text-[12.5px] font-medium text-ink-secondary" for="sc-product">Product</label>
@@ -85,7 +100,7 @@
     </div>
 
     <div class="mt-2 flex justify-end gap-2">
-      <button type="button" class="sf-btn-secondary" on:click={onClose}>Cancel</button>
+      <button type="button" class="sf-btn-secondary" onclick={onClose}>Cancel</button>
       <button type="submit" class="sf-btn-primary" disabled={$saving.loading || !selectedProduct}>
         {#if $saving.loading}
           <LoaderCircle size={14} class="animate-spin" />
