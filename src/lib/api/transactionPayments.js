@@ -57,3 +57,11 @@ export async function getTransactionPayment(transactionId, id) {
 export async function searchTransactionPayments(transactionId, filters = {}) {
   return apiRequest(`/api/transactions/${transactionId}/payments/filter`, { method: 'GET', params: filters });
 }
+
+/** 
+ * @param {{ page?: number, size?: number, sortBy?: 'createdAt'|'updatedAt'|'totalPayment', sortDirection?: 'ASC'|'DESC',
+ *   minTotalPayment?: number, maxTotalPayment?: number, minCreatedAt?: string, maxCreatedAt?: string }} [filters]
+ */
+export async function searchGlobalTransactionsPayments(filters = {}) {
+  return apiRequest(`/api/transactions/payments/filter`, { method: 'GET', params: filters });
+}
