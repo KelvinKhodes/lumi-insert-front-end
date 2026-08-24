@@ -31,9 +31,19 @@ export function useAsyncAction(fn) {
   /** @type {(...args: Parameters<Fn>) => Promise<Awaited<ReturnType<Fn>>>} */
   async function run(...args) {
     state.set({ loading: true, error: null, success: false, data: null });
-    try {
+    try { 
       const data = await fn(...args);
       state.set({ loading: false, error: null, success: true, data });
+      return data;
+    } catch (error) {
+      state.set({ loading: false, error, success: false, data: null });
+      throw error;
+    }
+  }
+
+  async function reload(data) {  
+    try {  
+      state.set({ loading: false, error: null, success: true, data: data });
       return data;
     } catch (error) {
       state.set({ loading: false, error, success: false, data: null });
@@ -45,5 +55,5 @@ export function useAsyncAction(fn) {
     state.set(initial);
   }
 
-  return { subscribe: state.subscribe, run, reset };
+  return { subscribe: state.subscribe, run, reset, reload };
 }
