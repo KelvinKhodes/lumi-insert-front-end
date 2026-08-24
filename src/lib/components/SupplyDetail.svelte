@@ -1,14 +1,18 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
   import { ArrowLeft, LoaderCircle, TriangleAlert, FileDown, Ban, RotateCcw, Wallet, Check } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getSupply, cancelSupply, refundSupplyItem, exportSupplyPdf } from '../api/supplies.js';
-  import { getSupplyPayments, createSupplyPayment } from '../api/supplyPayments.js';
+  import { getSupplyPayments, createSupplyPayment, refundSupplyPayment } from '../api/supplyPayments.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import { downloadBlob } from '../utils.js';
+    import { action, allowed } from '../permission.js';
+    import { session } from '../stores/session.js';
 
-  export let id;
+  let { id } = $props();
 
   const supply = useAsyncAction(getSupply);
   const payments = useAsyncAction(getSupplyPayments);
@@ -16,12 +20,13 @@
   const refunding = useAsyncAction(refundSupplyItem);
   const exporting = useAsyncAction(exportSupplyPdf);
   const paying = useAsyncAction(createSupplyPayment);
+  const refundPaying = useAsyncAction(refundSupplyPayment);
 
-  let paymentFrom = '';
-  let paymentTo = '';
-  let paymentAmount = '';
-  let paymentFiles = null;
-  let showPaymentForm = false;
+  let paymentFrom = $state('');
+  let paymentTo = $state('');
+  let paymentAmount = $state('');
+  let paymentFiles = $state(null);
+  let showPaymentForm = $state(false);
 
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
   const dateFmt = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -75,12 +80,29 @@
     }
   }
 
+  async function onSubmitRefundPayment() {
+    if (!paymentFiles?.length) return;
+    try {
+      await refundPaying.run(id, { paymentFrom, paymentTo, totalPayment: Number(paymentAmount), files: Array.from(paymentFiles) });
+      paymentFrom = '';
+      paymentTo = '';
+      paymentAmount = '';
+      paymentFiles = null;
+      showPaymentForm = false;
+      load();
+    } catch {
+      // error state already surfaced via $paying.error below
+    }
+  } 
+
   onMount(load);
-  $: pageTitle.set($supply.data?.invoiceId ? `Supply · ${$supply.data.invoiceId}` : 'Supply');
+  run(() => {
+    pageTitle.set($supply.data?.invoiceId ? `Supply · ${$supply.data.invoiceId}` : 'Supply');
+  });
 </script>
 
 <div class="p-5 md:p-7">
-  <button class="mb-4 flex items-center gap-1 text-[13px] text-ink-secondary hover:text-ink" on:click={() => navigate('/supplies')}>
+  <button class="mb-4 flex items-center gap-1 text-[13px] text-ink-secondary hover:text-ink" onclick={() => navigate('/supplies')}>
     <ArrowLeft size={14} />Back to supplies
   </button>
 
@@ -101,14 +123,16 @@
         <p class="mt-0.5 text-[13px] text-ink-secondary">{s.supplierName} · {dateFmt.format(new Date(s.createdAt))}</p>
       </div>
       <div class="flex gap-2">
-        <button class="sf-btn-secondary" on:click={onExport} disabled={$exporting.loading}>
+        <button class="sf-btn-secondary" onclick={onExport} disabled={$exporting.loading}>
           {#if $exporting.loading}<LoaderCircle size={14} class="animate-spin" />{:else}<FileDown size={14} />{/if}
           Export PDF
         </button>
-        {#if s.status === 'UNPAID'}
-          <button class="sf-btn-secondary text-danger" on:click={onCancel} disabled={$cancelling.loading}>
+        {#if allowed($session?.employee?.role, action.SuppliesWrite)}
+        {#if s.status !== 'CANCELLED'}
+          <button class="sf-btn-secondary text-danger" onclick={onCancel} disabled={$cancelling.loading}>
             <Ban size={14} />Cancel order
           </button>
+        {/if}
         {/if}
       </div>
     </div>
@@ -126,10 +150,12 @@
                 </div>
                 <div class="flex shrink-0 items-center gap-3">
                   <span class="font-mono text-ink">{currency.format(item.price * item.quantity)}</span>
-                  {#if s.status !== 'CANCELLED'}
-                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" on:click={() => onRefundItem(item)} aria-label="Refund">
+                  {#if allowed($session?.employee?.role, action.SuppliesWrite)}
+                  {#if s.status !== 'CANCELLED' && item.quantity > 0}
+                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onRefundItem(item)} aria-label="Refund">
                       <RotateCcw size={14} />
                     </button>
+                  {/if}
                   {/if}
                 </div>
               </div>
@@ -140,10 +166,12 @@
         <div class="sf-card p-4">
           <div class="mb-3 flex items-center justify-between">
             <h2 class="text-[13.5px] font-semibold text-ink">Payments</h2>
-            {#if s.status !== 'CANCELLED'}
-              <button class="sf-btn-secondary !py-1.5 !text-[12px]" on:click={() => (showPaymentForm = !showPaymentForm)}>
-                <Wallet size={13} />Record payment
+            {#if allowed($session?.employee?.role, action.SupplyPaymentsWrite)}
+            {#if  (s.totalUnpaid > 0 || s.totalUnrefunded > 0)}
+              <button class="sf-btn-secondary !py-1.5 !text-[12px] {s.totalUnrefunded > 0 ? "bg-red-600 hover:bg-red-500" : ""}" onclick={() => (showPaymentForm = !showPaymentForm)}>
+                <Wallet size={13} />Record {s.totalUnrefunded > 0? "refund" : "payment"}
               </button>
+            {/if}
             {/if}
           </div>
 
@@ -155,8 +183,8 @@
                 <input class="sf-input !py-1.5 text-[12.5px]" type="text" placeholder="To" bind:value={paymentTo} />
               </div>
               <input class="sf-input !py-1.5 text-[12.5px]" type="number" placeholder="Amount" bind:value={paymentAmount} />
-              <input type="file" accept="image/*,application/pdf" multiple class="sf-input !py-1.5 text-[12px]" on:change={(e) => (paymentFiles = e.currentTarget.files)} />
-              <button class="sf-btn-primary !py-1.5" on:click={onSubmitPayment} disabled={$paying.loading}>
+              <input type="file" accept="image/*,application/pdf" multiple class="sf-input !py-1.5 text-[12px]" onchange={(e) => (paymentFiles = e.currentTarget.files)} />
+              <button class="sf-btn-primary !py-1.5" onclick={s.totalUnrefunded > 0? onSubmitRefundPayment : onSubmitPayment} disabled={$paying.loading}>
                 {#if $paying.loading}<LoaderCircle size={13} class="animate-spin" />{:else}<Check size={13} />{/if}
                 Save payment
               </button>
@@ -184,15 +212,15 @@
 
       <div class="sf-card flex flex-col gap-2 p-4 text-[13px]">
         <h2 class="mb-1 text-[13.5px] font-semibold text-ink">Summary</h2>
+        <div class="flex justify-between text-ink-secondary"><span>Total Items</span><span class="font-mono">{s.totalItems}</span></div>
         <div class="flex justify-between text-ink-secondary"><span>Subtotal</span><span class="font-mono">{currency.format(s.subTotal)}</span></div>
         <div class="flex justify-between text-ink-secondary"><span>Fee</span><span class="font-mono">{currency.format(s.totalFee)}</span></div>
         <div class="flex justify-between text-ink-secondary"><span>Discount</span><span class="font-mono">-{currency.format(s.totalDiscount)}</span></div>
         <div class="flex justify-between border-t border-hairline pt-2 font-semibold text-ink"><span>Grand total</span><span class="font-mono">{currency.format(s.grandTotal)}</span></div>
         <div class="mt-2 flex justify-between text-success"><span>Paid</span><span class="font-mono">{currency.format(s.totalPaid)}</span></div>
         <div class="flex justify-between text-danger"><span>Unpaid</span><span class="font-mono">{currency.format(s.totalUnpaid)}</span></div>
-        {#if s.totalRefunded > 0}
-          <div class="flex justify-between text-ink-secondary"><span>Refunded</span><span class="font-mono">{currency.format(s.totalRefunded)}</span></div>
-        {/if}
+         <div class="flex justify-between text-ink-secondary"><span>Refunded</span><span class="font-mono">{currency.format(s.totalRefunded)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Unrefunded</span><span class="font-mono">{currency.format(s.totalUnrefunded)}</span></div> 
       </div>
     </div>
   {/if}

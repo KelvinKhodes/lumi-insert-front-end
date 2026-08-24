@@ -11,14 +11,14 @@
 
   const saving = useAsyncAction(createSupply);
 
-  let supplier = null;
-  let invoiceId = '';
-  let description = '';
-  let totalFee = '0';
-  let totalDiscount = '0';
+  let supplier = $state(null);
+  let invoiceId = $state('');
+  let description = $state('');
+  let totalFee = $state('0');
+  let totalDiscount = $state('0');
 
   /** @type {{ productId:number, name:string, price:string, quantity:string, description:string }[]} */
-  let items = [];
+  let items = $state([]);
 
   function addItem(product) {
     if (items.some((i) => i.productId === product.id)) return;
@@ -29,8 +29,8 @@
     items = items.filter((_, i) => i !== index);
   }
 
-  $: subTotal = items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
-  $: grandTotal = subTotal + (Number(totalFee) || 0) - (Number(totalDiscount) || 0);
+  let subTotal = $derived(items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0));
+  let grandTotal = $derived(subTotal + (Number(totalFee) || 0) - (Number(totalDiscount) || 0));
 
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
@@ -58,7 +58,7 @@
 </script>
 
 <div class="p-5 md:p-7">
-  <button class="mb-4 flex items-center gap-1 text-[13px] text-ink-secondary hover:text-ink" on:click={() => navigate('/supplies')}>
+  <button class="mb-4 flex items-center gap-1 text-[13px] text-ink-secondary hover:text-ink" onclick={() => navigate('/supplies')}>
     <ArrowLeft size={14} />Back to supplies
   </button>
 
@@ -75,7 +75,7 @@
     <div class="sf-card p-4 lg:col-span-2">
       <h2 class="mb-3 text-[13.5px] font-semibold text-ink">Items</h2>
 
-      <ProductPicker onSelect={addItem} placeholder="Search a product to add…" />
+      <ProductPicker isButtonActiveWhenOutOfStock={true} onSelect={addItem} placeholder="Search a product to add…" />
 
       {#if items.length}
         <div class="mt-3 flex flex-col divide-y divide-hairline">
@@ -84,7 +84,7 @@
               <span class="truncate text-[13px] font-medium text-ink">{item.name}</span>
               <input class="sf-input !py-1.5 text-[12.5px]" type="number" min="0" placeholder="Price" bind:value={item.price} required />
               <input class="sf-input !py-1.5 text-[12.5px]" type="number" min="1" placeholder="Qty" bind:value={item.quantity} required />
-              <button type="button" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" on:click={() => removeItem(index)} aria-label="Remove">
+              <button type="button" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => removeItem(index)} aria-label="Remove">
                 <Trash2 size={14} />
               </button>
             </div>
@@ -136,7 +136,7 @@
       <button
         type="button"
         class="sf-btn-primary w-full"
-        on:click={onSubmit}
+        onclick={onSubmit}
         disabled={$saving.loading || !supplier || !invoiceId || items.length === 0}
       >
         {#if $saving.loading}

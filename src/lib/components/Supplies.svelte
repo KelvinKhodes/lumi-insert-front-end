@@ -5,14 +5,16 @@
   import { pageTitle } from '../stores/pageTitle.js';
   import { getSupplies } from '../api/supplies.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
+    import { action, allowed } from '../permission.js';
+    import { session } from '../stores/session.js';
 
   pageTitle.set('Supplies');
 
   const supplies = useAsyncAction(getSupplies);
 
-  let page = 0;
+  let page = $state(0);
   const size = 12;
-  let statusFilter = '';
+  let statusFilter = $state('');
 
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
   const dateFmt = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -44,15 +46,17 @@
   <div class="mb-5 flex items-center justify-between gap-3">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Supplies</h1>
     <div class="ml-auto flex items-center gap-2">
-      <select class="sf-input w-auto max-w-[150px]" bind:value={statusFilter} on:change={onStatusChange}>
+      <select class="sf-input w-auto max-w-[150px]" bind:value={statusFilter} onchange={onStatusChange}>
         <option value="">All statuses</option>
         <option value="UNPAID">Unpaid</option>
         <option value="COMPLETE">Complete</option>
         <option value="CANCELLED">Cancelled</option>
       </select>
-      <button class="sf-btn-primary shrink-0" on:click={() => navigate('/supplies/new')}>
+      {#if allowed($session?.employee?.role, action.SuppliesWrite)}
+      <button class="sf-btn-primary shrink-0" onclick={() => navigate('/supplies/new')}>
         <Plus size={14} />New supply
       </button>
+      {/if}
     </div>
   </div>
 
@@ -96,10 +100,10 @@
     <div class="mt-4 flex items-center justify-between">
       <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
       <div class="flex gap-2">
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(-1)} disabled={$supplies.data.first}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$supplies.data.first}>
           <ChevronLeft size={14} />
         </button>
-        <button class="sf-btn-secondary !px-2.5" on:click={() => goToPage(1)} disabled={$supplies.data.last}>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(1)} disabled={$supplies.data.last}>
           <ChevronRight size={14} />
         </button>
       </div>
