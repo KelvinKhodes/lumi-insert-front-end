@@ -1,0 +1,38 @@
+name: Deploy Static Files to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install PNPM & Node.js
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Build Web App
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Copy Files to VPS via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_URL }}
+          username: ${{ secrets.VPS_HOST }}
+          key: ${{ secrets.VPS_KEY }}
+          source: "dist/*"
+          target: "/var/www/lumi-fe"
+          strip_components: 1
