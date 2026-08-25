@@ -22,7 +22,7 @@
 
 <div class="flex min-h-screen items-center justify-center bg-canvas p-6 dark:bg-dark-canvas">
   <form onsubmit={preventDefault(onSubmit)} class="sf-card w-full max-w-[360px] p-8">
-    <div class="mb-6 flex flex-col items-center text-center">
+    <div class="mb-3 flex flex-col items-center text-center">
       <div class="mb-3 h-11 w-11 rounded-[12px]">
         <img class="h-full w-full object-contain drop-shadow-[0_0px_0px_rgba(0,0,0,6)]" src={Logo} alt="Lumi Insert Logo">
       </div>
@@ -30,6 +30,15 @@
       <p class="mt-1 text-[13px] text-ink-secondary">Ready to make things happen? Let's get started!</p>
     </div>
 
+    <div class="p:mt-1 text-[13px] text-ink-secondary rounded-xl p-3 bg-gray-100/80">
+      <h2 class="text-[14px] font-semibold text-ink">Hi there! Reviewing my portfolio? 👋</h2>
+      <p class="font-semibold">Take a quick look below, enjoy your exploration! :D </p>
+      <div class="text-[12px] mt-1">
+        <p>Lumi Username: <strong>SUPERADMIN</strong></p>
+        <p>Lumi Password: <strong>SUPERADMIN123!</strong></p>
+        <p>Grafana: <strong>guest (username) | guest (password)</strong></p>
+      </div> 
+    </div>
     {#if $signingIn.error}
       <div class="mb-4 flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
         <TriangleAlert size={15} class="mt-0.5 shrink-0" />
