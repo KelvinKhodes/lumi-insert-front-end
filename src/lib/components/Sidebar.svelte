@@ -51,7 +51,7 @@
 
   ];
   const navDeveloperItems = [
-    { href: 'https:admin.lumi-insert.my.id', label: 'Grafana', icon: Monitor },
+    { href: 'https://admin.lumi-insert.my.id/', label: 'Grafana', icon: Monitor },
     { href: '/swagger-ui/index.html', label: 'Swagger', icon: FileText },
     { href: '/v3/api-docs', label: 'OpenAPI', icon: FileBracesCorner }
   ]
