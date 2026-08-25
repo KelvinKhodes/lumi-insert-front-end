@@ -9,6 +9,7 @@
   import { getMemos, markMemoAsRead } from '../api/memos.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import MemoViewModal from './MemoViewModal.svelte';
+  import WelcomeModal from './WelcomeModal.svelte';
   import { searchGlobalTransactionsPayments } from '../api/transactionPayments.js';
 
   pageTitle.set('Dashboard');
@@ -32,6 +33,9 @@
   let memoModalOpen = $state(null);
 
   let period = 'TODAY';
+
+  let hasSeenWelcomeModal = $state(false);
+
   const periodOptions = [
     { value: 'TODAY', label: 'Today' },
     { value: 'LAST_7_DAYS', label: 'Last 7 days' },
@@ -76,12 +80,30 @@
     loadTopStats();
   }
 
+  function welcomeModalFirstTime(){
+    try {
+      const raw = localStorage.getItem("has_seen_welcome_modal"); 
+      if(raw) {
+        hasSeenWelcomeModal = true;
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) { return false } 
+  }
+
+  function handleWelcomeModalClose(){
+    localStorage.setItem("has_seen_welcome_modal", "true");
+    hasSeenWelcomeModal = true;
+  }
+
   onMount(() => {
+    welcomeModalFirstTime();
     lowStock.run({ sortBy: 'stockQuantity', sortDirection: 'ASC', size: 5 });
     recentTransactions.run({ sortBy: 'createdAt', sortDirection: 'DESC', size: 5 });
     recentMemos.run({});
     loadTopStats();
-    recentPayments.run({})
+    recentPayments.run({}) 
   });
 </script>
 
@@ -313,4 +335,5 @@
   </div>
 </div>
 
+<WelcomeModal open={!hasSeenWelcomeModal} onClose={handleWelcomeModalClose}/>
 <MemoViewModal open={memoModalOpen !== null} onClose={() => (memoModalOpen = null)} memo={memoModalOpen} />
