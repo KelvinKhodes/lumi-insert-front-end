@@ -1,5 +1,6 @@
 <script>
   import { Link } from 'svelte-routing';
+  import Logo from '../assets/Logo.png';
   import {
     LayoutDashboard,
     Box,
@@ -50,9 +51,9 @@
 
   ];
   const navDeveloperItems = [
-    { href: 'admin.lumi-insert.my.id', label: 'Grafana (Monitoring)', icon: Monitor },
-    { href: '/swagger-ui/index.html', label: 'Swagger (Documentations)', icon: FileText },
-    { href: '/v3/api-docs', label: 'OpenAPI (JSON Docs)', icon: FileBracesCorner }
+    { href: 'https:admin.lumi-insert.my.id', label: 'Grafana', icon: Monitor },
+    { href: '/swagger-ui/index.html', label: 'Swagger', icon: FileText },
+    { href: '/v3/api-docs', label: 'OpenAPI', icon: FileBracesCorner }
   ]
   
 
@@ -94,7 +95,7 @@
       <div class="flex items-center justify-between px-1 pb-4 pt-1">
         <div class="flex items-center gap-2">
           <div class="h-6 w-6 rounded-[7px]">
-            <img class="h-full w-full object-contain drop-shadow-[0_0px_0px_rgba(0,0,0,6)]" src="src/lib/assets/LUMI INSERT Logo.png" alt="Lumi Insert Logo">
+            <img class="h-full w-full object-contain drop-shadow-[0_0px_0px_rgba(0,0,0,6)]" src={Logo} alt="Lumi Insert Logo">
           </div>
           <span class="text-[14px] font-semibold text-ink">Lumi Insert</span>
         </div>
@@ -113,11 +114,11 @@
           {/each}
         </nav>
         <nav class="flex flex-1 flex-col gap-0.5 border-t-2 border-gray-200 overflow-y-auto">
-          {#each navDeveloperItems as item}
-            <Link to={item.href} getProps={linkProps} on:click={onClose}>
+          {#each navDeveloperItems as item} 
+            <a class="flex items-center gap-2.5 rounded-control px-3 py-1.5 text-[13px] transition-colors duration-100" target="_blank"  href={item.href}>
               <item.icon size={16} strokeWidth={2} />
               {item.label}
-            </Link>
+            </a>
           {/each}
         </nav>
       </div>
