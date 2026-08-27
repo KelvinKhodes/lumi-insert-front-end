@@ -16,7 +16,7 @@
     category.isActive ? deactivateCategory(category.id) : activateCategory(category.id)
   );
 
-  let isArchieved = $state(false);
+  let isArchived = $state(false);
   let page = $state(0);
   const size = 12;
 
@@ -24,7 +24,7 @@
   let editingCategory = $state(null);
 
   function load() {
-    categories.run({ isArchieved, page, size, sortBy: 'name', sortDirection: 'ASC' });
+    categories.run({ isArchived, page, size, sortBy: 'name', sortDirection: 'ASC' });
   }
 
   function goToPage(delta) {
@@ -48,7 +48,7 @@
   }
 
   function handleArchieveToggle(){ 
-      isArchieved = !isArchieved;
+      isArchived = !isArchived;
       page = 0;
       load();
   }
