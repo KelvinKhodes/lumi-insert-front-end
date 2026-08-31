@@ -145,7 +145,7 @@ let refreshInFlight = null;
 function refreshSession() {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
-      const response = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      const response = await fetch(`/api/auth/refresh`, {
         method: 'POST',
         credentials: 'include' // refreshToken travels as a cookie per the API spec
       });
@@ -227,7 +227,7 @@ export async function apiRequest(path, options = {}) {
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = `${BASE_URL}${path}${buildQueryString(params)}`;
+  const url = `${path}${buildQueryString(params)}`;
 
   let response;
   try {

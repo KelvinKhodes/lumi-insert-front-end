@@ -6,7 +6,13 @@ export default defineConfig({
   base: './',
   plugins: [svelte()], 
   server: {
-    allowedHosts: ['lumi-insert.my.id'],
-    port: 5173
+    allowedHosts: ['lumi-insert.com'],
+    port: 5173,
+    proxy: { 
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
   }
 });
