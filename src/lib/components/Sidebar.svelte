@@ -18,10 +18,8 @@
     Monitor,
 
     FileText,
-
-    FileBracesCorner
-
-
+    FileBracesCorner,
+    History
 
   } from 'lucide-svelte';
   import { session, clearSession } from '../stores/session.js';
@@ -48,6 +46,7 @@
     { href: '/transactions', label: 'Transactions', icon: Receipt },
     { href: '/stock-cards', label: 'Stock cards', icon: ClipboardList },
     { href: '/memos', label: 'Memos', icon: StickyNote },
+    { href: '/activity-logs', label: 'Activity logs', icon: History },
 
   ];
   const navDeveloperItems = [
