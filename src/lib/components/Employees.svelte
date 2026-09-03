@@ -25,7 +25,7 @@
   };
 
   function load() {
-    employees.run({ page, size, sortBy: 'fullname', sortDirection: 'ASC' });
+    employees.run({ page, size, sortBy: 'createdAt', sortDirection: 'ASC' });
   }
 
   function goToPage(delta) {
@@ -51,7 +51,7 @@
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Employees</h1>
     {#if allowed($session?.employee?.role, action.EmployeesWrite)}
     <button class="sf-btn-primary ml-auto" onclick={openCreate}>
-      <Plus size={14} />New employee
+      <Plus size={14} aria-hidden="true" />New employee
     </button>
     {/if}
   </div>

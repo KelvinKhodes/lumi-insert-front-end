@@ -5,6 +5,10 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    font-family: Inter, 'Segoe UI', sans-serif;
+  }
+
   html {
     @apply font-sans text-ink;
     -webkit-font-smoothing: antialiased;
@@ -13,6 +17,19 @@
 
   body {
     @apply m-0;
+  }
+
+  .theme-id,
+  .theme-number,
+  .theme-amount,
+  .theme-mono,
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: Inter, 'Segoe UI', sans-serif;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    font-variant-numeric: tabular-nums lining-nums;
   }
 
   /* visible keyboard focus, macOS-style blue focus ring */
@@ -62,6 +79,71 @@
 
   .sf-card {
     @apply bg-surface dark:bg-dark-surface border border-hairline dark:border-dark-hairline rounded-sf shadow-card;
+  }
+
+  .theme-page-title {
+    @apply text-[22px] font-semibold tracking-[-0.02em] text-ink;
+  }
+
+  .theme-card-title {
+    @apply text-[13px] font-semibold tracking-[0.01em] text-ink;
+  }
+
+  .theme-meta {
+    @apply text-[12px] text-ink-secondary;
+  }
+
+  .theme-body {
+    @apply text-[13px] leading-5 text-ink;
+  }
+
+  .theme-number {
+    @apply text-[12.5px] font-medium tracking-[-0.01em] text-ink;
+    font-family: Inter, 'Segoe UI', sans-serif;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .theme-amount {
+    @apply text-[12.5px] font-medium tracking-[-0.01em] text-ink;
+    font-family: Inter, 'Segoe UI', sans-serif;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .theme-id {
+    @apply text-[12px] font-medium tracking-[0.02em] text-ink-secondary;
+    font-family: Inter, 'Segoe UI', sans-serif;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .theme-panel {
+    @apply sf-card flex h-full min-h-[330px] flex-col p-4;
+  }
+
+  .theme-panel-scroll {
+    @apply mt-3 flex-1 overflow-y-auto pr-1;
+    max-height: 280px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+  }
+
+  .theme-panel-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .theme-panel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.18);
+    border-radius: 9999px;
+  }
+
+  .theme-row-link {
+    @apply flex items-center justify-between gap-3 rounded-md px-3 py-2 text-[13px] text-ink transition-colors hover:bg-black/[0.04];
+  }
+
+  .theme-status-badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium;
   }
 
   .sf-btn-primary {

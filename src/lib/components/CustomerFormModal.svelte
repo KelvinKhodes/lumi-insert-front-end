@@ -85,8 +85,8 @@
   {:else}
     <form onsubmit={preventDefault(onSubmit)} class="flex flex-col gap-3.5">
       {#if $saving.error}
-        <div class="flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
-          <TriangleAlert size={15} class="mt-0.5 shrink-0" />
+        <div aria-live="polite" aria-atomic="true" class="flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
+          <TriangleAlert size={15} class="mt-0.5 shrink-0" aria-hidden="true" />
           <span>{$saving.error.message}</span>
         </div>
       {/if}

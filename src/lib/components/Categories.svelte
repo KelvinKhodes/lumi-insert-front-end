@@ -58,12 +58,12 @@
 
 <div class="p-5 md:p-7">
   <div class="mb-5 flex items-center justify-between">
-    <h1 class="hidden text-[22px] font-semibold text-ink md:block">Categories</h1>
+    <h1 class="theme-page-title hidden md:block">Categories</h1>
     <div class="ml-auto flex flex-row gap-2">
       <Toggle label="Archieved" value="off" design="slider" options={['Inactive', 'Active']} onChange={handleArchieveToggle}/>
       {#if allowed($session?.employee?.role, action.CategoriesWrite)}
       <button class="sf-btn-primary" onclick={openCreate}>
-        <Plus size={14} />New category
+        <Plus size={14} aria-hidden="true" />New category
       </button>
       {/if}
     </div> 
@@ -84,24 +84,24 @@
       {#each $categories.data.content as category (category.id)}
         <div class="sf-card flex items-center justify-between p-3.5">
           <div class="min-w-0">
-            <p class="truncate text-[13.5px] font-medium text-ink">{category.name}</p>
-            <p class="text-[12px] text-ink-secondary">{category.totalItems ?? 0} products</p>
+            <p class="theme-body truncate font-medium">{category.name}</p>
+            <p class="theme-meta">{category.totalItems ?? 0} products</p>
           </div>
           <div class="flex shrink-0 items-center gap-1">
             <span class="mr-1 rounded-full px-2 py-0.5 text-[11px] font-medium {category.isActive ? 'bg-success-soft text-success' : 'bg-black/[0.06] text-ink-secondary'}">
               {category.isActive ? 'Active' : 'Inactive'}
             </span>
             {#if allowed($session?.employee?.role, action.CategoriesWrite)}
-            <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => openEdit(category)} aria-label="Edit">
-              <Pencil size={14} />
+            <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => openEdit(category)} aria-label="Edit category">
+              <Pencil size={14} aria-hidden="true" />
             </button>
             <button
               class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]"
               onclick={() => onToggle(category)}
               disabled={$toggling.loading}
-              aria-label={category.isActive ? 'Deactivate' : 'Activate'}
+              aria-label={category.isActive ? 'Deactivate category' : 'Activate category'}
             >
-              <Power size={14} class={category.isActive ? 'text-danger' : 'text-success'} />
+              <Power size={14} aria-hidden="true" class={category.isActive ? 'text-danger' : 'text-success'} />
             </button>
             {/if}
           </div>

@@ -131,10 +131,12 @@
 
 <div class="p-5 md:p-7">
   <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-    <h1 class="hidden text-[22px] font-semibold text-ink md:block">Products</h1>
+    <h1 class="theme-page-title hidden md:block">Products</h1>
 
     <form onsubmit={preventDefault(onSearch)} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
-      <Funnel size={14} role="button" onclick={() => (modalFilterOpen = true)}/>
+      <button type="button" aria-label="Toggle filter panel" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => (modalFilterOpen = true)}>
+        <Funnel role="presentation" aria-hidden="true" size={14} />
+      </button>
 
       <div class="relative flex-1 md:max-w-[220px]">
         <Search size={14} class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-tertiary" />
@@ -144,7 +146,7 @@
       <button type="submit" class="sf-btn-secondary shrink-0">Search</button>
       {#if allowed($session?.employee?.role, action.ProductsWrite)}
       <button type="button" class="sf-btn-primary shrink-0" onclick={openCreate}>
-        <Plus size={14} />New product
+        <Plus size={14} aria-hidden="true" />New product
       </button>
       {/if}
     </form>
@@ -165,7 +167,7 @@
     <div class="sf-card hidden overflow-hidden md:block">
       <table class="w-full text-left text-[13px]">
         <thead>
-          <tr class="border-b border-hairline text-[11.5px] uppercase tracking-wide text-ink-secondary">
+          <tr class="border-b border-hairline text-[11.5px] uppercase tracking-[0.08em] text-ink-secondary">
             <th class="px-4 py-2.5 font-medium">Name</th>
             <th class="px-4 py-2.5 font-medium">Category</th>
             <th class="px-4 py-2.5 font-medium">Base price</th>
@@ -179,11 +181,11 @@
           {#each $products.data.content as product (product.id)} 
             <tr class="border-b border-hairline last:border-0 hover:bg-black/[0.015]" >
               <td class="px-4 py-2.5 font-medium text-ink">{product.name}</td>
-              <td class="px-4 py-2.5 text-ink-secondary">{product.category?.name + (product.category?.isActive ? '' : ' (Archieved)') ?? '—'}</td>
-              <td class="px-4 py-2.5 font-mono text-ink-secondary">{currency.format(product.basePrice)}</td>
-              <td class="px-4 py-2.5 font-mono text-ink">{currency.format(product.sellPrice)}</td>
+              <td class="px-4 py-2.5 theme-meta">{product.category?.name + (product.category?.isActive ? '' : ' (Archieved)') ?? '—'}</td>
+              <td class="theme-amount px-4 py-2.5 text-ink-secondary">{currency.format(product.basePrice)}</td>
+              <td class="theme-amount px-4 py-2.5 text-ink">{currency.format(product.sellPrice)}</td>
               <td class="px-4 py-2.5">
-                <span class="{product.stockQuantity <= product.stockMinimum ? 'text-danger' : 'text-ink'} font-mono">
+                <span class="theme-number {product.stockQuantity <= product.stockMinimum ? 'text-danger' : 'text-ink'}">
                   {product.stockQuantity}
                 </span>
               </td>
@@ -200,8 +202,8 @@
                     </button>
                   {/if}
                   {#if allowed($session?.employee?.role, action.ProductsWrite)}
-                  <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => openEdit(product)} aria-label="Edit">
-                    <Pencil size={14} />
+                  <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => openEdit(product)} aria-label="Edit product">
+                    <Pencil size={14} aria-hidden="true" />
                   </button>
                   <button
                     class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]"
@@ -234,8 +236,8 @@
             </span>
           </div>
           <div class="mt-2.5 flex items-center justify-between text-[12.5px]">
-            <span class="font-mono text-ink">{currency.format(product.sellPrice)}</span>
-            <span class="font-mono {product.stockQuantity <= product.stockMinimum ? 'text-danger' : 'text-ink-secondary'}">
+            <span class="theme-amount text-ink">{currency.format(product.sellPrice)}</span>
+            <span class="theme-number {product.stockQuantity <= product.stockMinimum ? 'text-danger' : 'text-ink-secondary'}">
               {product.stockQuantity} in stock
             </span>
           </div>

@@ -57,7 +57,7 @@
         <option value="REPAIRED">Repaired</option>
       </select>
       <button class="sf-btn-primary shrink-0" onclick={() => (modalOpen = true)}>
-        <Plus size={14} />New
+        <Plus size={14} aria-hidden="true" />New
       </button>
     </div>
   </div>
@@ -82,7 +82,7 @@
               <p class="truncate text-[12px] text-ink-secondary">{card.description || '—'} · {dateFmt.format(new Date(card.createdAt))}</p>
             </div>
             <div class="flex shrink-0 items-center gap-3">
-              <span class="font-mono text-[12.5px] text-ink-secondary">{card.oldStock} <ChevronRight size={11} class="inline" /> {card.newStock}</span>
+              <span class="theme-number text-[12.5px] text-ink-secondary">{card.oldStock} <ChevronRight size={11} class="inline" /> {card.newStock}</span>
               <span class="rounded-full px-2 py-0.5 text-[11px] font-medium {typeStyle[card.type] ?? 'bg-black/[0.06] text-ink-secondary'}">
                 {card.type.replace('_', ' ')}
               </span>

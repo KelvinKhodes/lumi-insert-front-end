@@ -162,7 +162,9 @@
 
     <form class="flex flex-1 flex-wrap items-center gap-2 md:justify-end" onsubmit={(event) => { event.preventDefault(); onSearch(); }}>
 
-      <Funnel role="button" size={14} onclick={() => (showFilters = !showFilters)}/>
+      <button type="button" aria-label="Toggle filter" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => (showFilters = !showFilters)}>
+        <Funnel size={14} aria-hidden="true" />
+      </button>
 
       <div class="relative flex-1 md:max-w-[260px]">
         <Search size={14} class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-tertiary" />
@@ -218,7 +220,7 @@
                 <div class="text-[11px] text-ink-secondary">{log.entityId ?? '—'}</div>
               </td>
               <td class="px-4 py-2.5 text-ink-secondary">{log.createdBy ?? '—'}</td>
-              <td class="px-4 py-2.5 font-mono text-ink-secondary">{log.ipAddress ?? '—'}</td>
+              <td class="px-4 py-2.5 text-ink-secondary">{log.ipAddress ?? '—'}</td>
             </tr>
           {/each}
         </tbody>
@@ -244,7 +246,7 @@
 
           <div class="mt-2.5 flex items-center justify-between text-[12px] text-ink-secondary">
             <span>{log.createdBy ?? '—'}</span>
-            <span class="font-mono">{log.ipAddress ?? '—'}</span>
+            <span>{log.ipAddress ?? '—'}</span>
           </div>
         </div>
       {/each}

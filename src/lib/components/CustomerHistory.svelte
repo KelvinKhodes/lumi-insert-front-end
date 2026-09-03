@@ -111,17 +111,17 @@
             </span>
           </div>
           <div class="mt-2.5 flex items-center justify-between text-[12.5px]">
-            <span class="font-mono text-ink">{currency.format(transaction.sellPrice)}</span>
-            <span class="font-mono {transaction.stockQuantity <= transaction.stockMinimum ? 'text-danger' : 'text-ink-secondary'}">
+            <span class="theme-amount text-ink">{currency.format(transaction.sellPrice)}</span>
+            <span class="theme-number {transaction.stockQuantity <= transaction.stockMinimum ? 'text-danger' : 'text-ink-secondary'}">
               {transaction.stockQuantity} in stock
             </span>
           </div>
           <div class="mt-3 flex gap-2">
             <button class="sf-btn-secondary flex-1 !py-1.5" onclick={() => openEdit(transaction)}>
-              <Pencil size={13} />Edit
+              <Pencil size={13} aria-hidden="true" />Edit
             </button>
             <button class="sf-btn-secondary flex-1 !py-1.5" onclick={() => onToggle(transaction)} disabled={$toggling.loading}>
-              <Power size={13} class={transaction.isActive ? 'text-danger' : 'text-success'} />
+              <Power size={13} aria-hidden="true" class={transaction.isActive ? 'text-danger' : 'text-success'} />
               {transaction.isActive ? 'Deactivate' : 'Activate'}
             </button>
           </div>

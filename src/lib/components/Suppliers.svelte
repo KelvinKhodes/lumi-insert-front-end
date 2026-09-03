@@ -80,7 +80,7 @@
       <button type="submit" class="sf-btn-secondary shrink-0">Search</button>
       {#if allowed($session?.employee?.role, action.SuppliersWrite)}
       <button type="button" class="sf-btn-primary shrink-0" onclick={openCreate}>
-        <Plus size={14} />New supplier
+        <Plus size={14} aria-hidden="true" />New supplier
       </button>
       {/if}
     </form>
@@ -111,11 +111,11 @@
           </div>
           <div class="flex items-center gap-4 text-[12px]">
             <div class="text-right">
-              <p class="font-mono font-medium text-ink">{supplier.totalTransaction ?? 0}</p>
+              <p class="theme-number font-medium text-ink">{supplier.totalTransaction ?? 0}</p>
               <p class="text-ink-secondary">Transactions</p>
             </div>
             <div class="text-right">
-              <p class="font-mono font-medium text-danger">{currency.format(supplier.totalUnpaid ?? 0)}</p>
+              <p class="theme-amount font-medium text-danger">{currency.format(supplier.totalUnpaid ?? 0)}</p>
               <p class="text-ink-secondary">Unpaid</p>
             </div>
             {#if allowed($session?.employee?.role, action.SuppliersWrite)}

@@ -40,8 +40,8 @@
       </div> 
     </div>
     {#if $signingIn.error}
-      <div class="mb-4 flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
-        <TriangleAlert size={15} class="mt-0.5 shrink-0" />
+      <div aria-live="polite" aria-atomic="true" class="mb-4 flex items-start gap-2 rounded-control bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
+        <TriangleAlert size={15} class="mt-0.5 shrink-0" aria-hidden="true" />
         <span>{$signingIn.error.message}</span>
       </div>
     {/if}
@@ -72,7 +72,7 @@
       />
     </div>
 
-    <button type="submit" class="sf-btn-primary w-full" disabled={$signingIn.loading}>
+    <button type="submit" class="sf-btn-primary w-full" disabled={$signingIn.loading} aria-busy={$signingIn.loading}>
       {#if $signingIn.loading}
         <LoaderCircle size={15} class="animate-spin" />
         Signing in…

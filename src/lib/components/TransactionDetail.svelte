@@ -229,17 +229,17 @@
                       onchange={(e) => onQuantityChange(item, e.currentTarget.value)}
                     />
                   {:else}
-                    <span class="font-mono text-ink-secondary {item.quantity < 0 ? "text-red-500" : ""}">×{item.quantity}</span>
+                    <span class="theme-number text-ink-secondary {item.quantity < 0 ? "text-red-500" : ""}">×{item.quantity}</span>
                   {/if}
 
-                  <span class="w-24 shrink-0 text-right font-mono text-ink {item.quantity < 0 ? "text-red-500" : ""}">{currency.format(item.price * item.quantity)}</span>
+                  <span class="w-24 shrink-0 text-right theme-amount text-ink {item.quantity < 0 ? "text-red-500" : ""}">{currency.format(item.price * item.quantity)}</span>
 
                   {#if isEditable}
-                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onDeleteItem(item)} aria-label="Remove">
+                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onDeleteItem(item)} aria-label="Remove transaction item">
                       <Trash2 size={14} />
                     </button>
                   {:else if (t.status === 'COMPLETE' || t.status === 'PROCESS') && item.quantity > 0}
-                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onRefundItem(item)} aria-label="Refund">
+                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onRefundItem(item)} aria-label="Refund transaction item">
                       <RotateCcw size={14} />
                     </button>
                   {/if}
@@ -287,7 +287,7 @@
               {#each $payments.data.content as payment (payment.id)}
                 <div class="flex items-center justify-between py-2 text-[13px]">
                   <span class="text-ink-secondary">{payment.paymentFrom} → {payment.paymentTo}</span>
-                  <span class="font-mono {payment.isForRefund ? 'text-danger' : 'text-success'}">
+                  <span class="theme-amount {payment.isForRefund ? 'text-danger' : 'text-success'}">
                     {payment.isForRefund ? '-' : '+'}{currency.format(payment.totalPayment)}
                   </span>
                 </div>
@@ -299,15 +299,15 @@
 
       <div class="sf-card flex flex-col gap-2 p-4 text-[13px]">
         <h2 class="mb-1 text-[13.5px] font-semibold text-ink">Summary</h2>
-        <div class="flex justify-between text-ink-secondary"><span>Total Items</span><span class="font-mono">{t.totalItems}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Subtotal</span><span class="font-mono">{currency.format(t.subTotal)}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Fee</span><span class="font-mono">{currency.format(t.totalFee)}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Discount</span><span class="font-mono">-{currency.format(t.totalDiscount)}</span></div>
-        <div class="flex justify-between border-t border-hairline pt-2 font-semibold text-ink"><span>Grand total</span><span class="font-mono">{currency.format(t.grandTotal)}</span></div>
-        <div class="mt-2 flex justify-between text-success"><span>Paid</span><span class="font-mono">{currency.format(t.totalPaid)}</span></div>
-        <div class="flex justify-between text-danger"><span>Unpaid</span><span class="font-mono">{currency.format(t.totalUnpaid)}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Refunded</span><span class="font-mono">{currency.format(t.totalRefunded)}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Unrefunded</span><span class="font-mono">{currency.format(t.totalUnrefunded)}</span></div>  
+        <div class="flex justify-between text-ink-secondary"><span>Total Items</span><span class="theme-number">{t.totalItems}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Subtotal</span><span class="theme-amount">{currency.format(t.subTotal)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Fee</span><span class="theme-amount">{currency.format(t.totalFee)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Discount</span><span class="theme-amount">-{currency.format(t.totalDiscount)}</span></div>
+        <div class="flex justify-between border-t border-hairline pt-2 font-semibold text-ink"><span>Grand total</span><span class="theme-amount">{currency.format(t.grandTotal)}</span></div>
+        <div class="mt-2 flex justify-between text-success"><span>Paid</span><span class="theme-amount">{currency.format(t.totalPaid)}</span></div>
+        <div class="flex justify-between text-danger"><span>Unpaid</span><span class="theme-amount">{currency.format(t.totalUnpaid)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Refunded</span><span class="theme-amount">{currency.format(t.totalRefunded)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Unrefunded</span><span class="theme-amount">{currency.format(t.totalUnrefunded)}</span></div>  
       </div>
     </div>
   {/if}

@@ -99,7 +99,7 @@
           <span class="text-[14px] font-semibold text-ink">Lumi Insert</span>
         </div>
         <button class="rounded-control p-1 text-ink-secondary hover:bg-black/[0.05] md:hidden" onclick={onClose} aria-label="Close">
-          <X size={16} />
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
 

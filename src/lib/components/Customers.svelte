@@ -59,7 +59,7 @@
 
 <div class="p-5 md:p-7">
   <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-    <h1 class="hidden text-[22px] font-semibold text-ink md:block">Customers</h1>
+    <h1 class="theme-page-title hidden md:block">Customers</h1>
 
     <form onsubmit={preventDefault(onSearch)} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
       <div class="relative flex-1 md:max-w-[220px]">
@@ -76,7 +76,7 @@
       <button type="submit" class="sf-btn-secondary shrink-0">Search</button>
       {#if allowed($session?.employee?.role, action.CustomersWrite)}
       <button type="button" class="sf-btn-primary shrink-0" onclick={openCreate}>
-        <Plus size={14} />New customer
+        <Plus size={14} aria-hidden="true" />New customer
       </button>
       {/if}
     </form>
@@ -107,8 +107,8 @@
                   {customer.name.slice(0, 2).toUpperCase()}
                 </div>
                 <div class="min-w-0">
-                  <p class="truncate text-[13.5px] font-medium text-ink">{customer.name}</p>
-                  <p class="truncate text-[12px] text-ink-secondary">{customer.email || customer.contact}</p>
+                  <p class="theme-body truncate font-medium">{customer.name}</p>
+                  <p class="theme-meta truncate">{customer.email || customer.contact}</p>
                 </div>
               </div>
               <Arrow size={15} class="shrink-0 text-ink-tertiary" />

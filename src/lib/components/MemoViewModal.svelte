@@ -18,7 +18,7 @@
   <p class="text-ink-secondary whitespace-pre-line">{memo?.body}</p>
   {#if memo?.images !== null}
     {#each memo?.images as image}
-      <img src={image} class="mt-2 max-h-[300px] w-full object-contain" />
+      <img src={image} alt="Memo attachment" class="mt-2 max-h-[300px] w-full object-contain" />
     {/each}
   {/if}
 </Modal>
