@@ -55,8 +55,8 @@
     <h1 class="theme-page-title hidden md:block">Transactions</h1>
     
     <div class="ml-auto flex items-center gap-2">
-      <button class="sf-btn-primary shrink-0" onclick={exportXLSX}>
-        <FileDown size={14} aria-hidden="true" />
+      <button type="button" aria-label="Export Transaction History as XLSX" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={exportXLSX}>
+        <FileDown role="presentation" size={14} aria-hidden="true" />
       </button>
       <select class="sf-input w-auto max-w-[150px]" bind:value={statusFilter} onchange={onStatusChange}>
         <option value="">All statuses</option>
