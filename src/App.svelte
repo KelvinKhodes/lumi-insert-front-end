@@ -11,6 +11,7 @@
   import Suppliers from './lib/components/Suppliers.svelte';
   import StockCards from './lib/components/StockCards.svelte';
   import Memos from './lib/components/Memos.svelte';
+  import ActivityLogs from './lib/components/ActivityLogs.svelte';
   import Supplies from './lib/components/Supplies.svelte';
   import SupplyCreate from './lib/components/SupplyCreate.svelte';
   import SupplyDetail from './lib/components/SupplyDetail.svelte';
@@ -58,6 +59,7 @@
             </Route>
       <Route path="/stock-cards"><StockCards /></Route>
       <Route path="/memos"><Memos /></Route>
+      <Route path="/activity-logs"><ActivityLogs /></Route>
     </AppShell>
   {/if}
 </Router>

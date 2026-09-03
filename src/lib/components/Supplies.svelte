@@ -54,7 +54,7 @@
       </select>
       {#if allowed($session?.employee?.role, action.SuppliesWrite)}
       <button class="sf-btn-primary shrink-0" onclick={() => navigate('/supplies/new')}>
-        <Plus size={14} />New supply
+        <Plus size={14} aria-hidden="true" />New supply
       </button>
       {/if}
     </div>
@@ -86,7 +86,7 @@
                 </p>
               </div>
               <div class="flex shrink-0 items-center gap-3">
-                <span class="font-mono text-[13px] text-ink">{currency.format(supply.grandTotal ?? 0)}</span>
+                <span class="theme-amount text-[13px] text-ink">{currency.format(supply.grandTotal ?? 0)}</span>
                 <span class="rounded-full px-2 py-0.5 text-[11px] font-medium {statusStyle[supply.status] ?? 'bg-black/[0.06] text-ink-secondary'}">
                   {supply.status}
                 </span>

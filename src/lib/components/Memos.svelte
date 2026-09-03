@@ -63,7 +63,7 @@
   <div class="mb-5 flex items-center justify-between">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Memos</h1>
     <button class="sf-btn-primary ml-auto" onclick={() => (modalOpen = true)}>
-      <Plus size={14} />New memo
+      <Plus size={14} aria-hidden="true" />New memo
     </button>
   </div>
 
@@ -110,17 +110,17 @@
               <button 
                 class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" 
                 onclick={(e) => openEdit(memo, e)} 
-                aria-label="Edit" >
-                <Pencil size={14} />
+                aria-label="Edit memo" >
+                <Pencil size={14} aria-hidden="true" />
               </button>
               {#if allowed($session?.employee?.role, action.MemosArchieve)}
               <button
                 class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger"
                 onclick={(e) => onArchive(memo, e)}
                 disabled={$archiving.loading}
-                aria-label="Archive"
+                aria-label="Archive memo"
               >
-                <Archive size={14} />
+                <Archive size={14} aria-hidden="true" />
               </button>
               {/if}
             </div>

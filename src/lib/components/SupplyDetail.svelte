@@ -149,10 +149,10 @@
                   <p class="text-[11.5px] text-ink-secondary">{item.quantity} × {currency.format(item.price)}</p>
                 </div>
                 <div class="flex shrink-0 items-center gap-3">
-                  <span class="font-mono text-ink">{currency.format(item.price * item.quantity)}</span>
+                  <span class="theme-amount text-ink">{currency.format(item.price * item.quantity)}</span>
                   {#if allowed($session?.employee?.role, action.SuppliesWrite)}
                   {#if s.status !== 'CANCELLED' && item.quantity > 0}
-                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onRefundItem(item)} aria-label="Refund">
+                    <button class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => onRefundItem(item)} aria-label="Refund supply item">
                       <RotateCcw size={14} />
                     </button>
                   {/if}
@@ -200,7 +200,7 @@
               {#each $payments.data.content as payment (payment.id)}
                 <div class="flex items-center justify-between py-2 text-[13px]">
                   <span class="text-ink-secondary">{payment.paymentFrom} → {payment.paymentTo}</span>
-                  <span class="font-mono {payment.isForRefund ? 'text-danger' : 'text-success'}">
+                  <span class="theme-amount {payment.isForRefund ? 'text-danger' : 'text-success'}">
                     {payment.isForRefund ? '-' : '+'}{currency.format(payment.totalPayment)}
                   </span>
                 </div>
@@ -212,15 +212,15 @@
 
       <div class="sf-card flex flex-col gap-2 p-4 text-[13px]">
         <h2 class="mb-1 text-[13.5px] font-semibold text-ink">Summary</h2>
-        <div class="flex justify-between text-ink-secondary"><span>Total Items</span><span class="font-mono">{s.totalItems}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Subtotal</span><span class="font-mono">{currency.format(s.subTotal)}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Fee</span><span class="font-mono">{currency.format(s.totalFee)}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Discount</span><span class="font-mono">-{currency.format(s.totalDiscount)}</span></div>
-        <div class="flex justify-between border-t border-hairline pt-2 font-semibold text-ink"><span>Grand total</span><span class="font-mono">{currency.format(s.grandTotal)}</span></div>
-        <div class="mt-2 flex justify-between text-success"><span>Paid</span><span class="font-mono">{currency.format(s.totalPaid)}</span></div>
-        <div class="flex justify-between text-danger"><span>Unpaid</span><span class="font-mono">{currency.format(s.totalUnpaid)}</span></div>
-         <div class="flex justify-between text-ink-secondary"><span>Refunded</span><span class="font-mono">{currency.format(s.totalRefunded)}</span></div>
-        <div class="flex justify-between text-ink-secondary"><span>Unrefunded</span><span class="font-mono">{currency.format(s.totalUnrefunded)}</span></div> 
+        <div class="flex justify-between text-ink-secondary"><span>Total Items</span><span class="theme-number">{s.totalItems}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Subtotal</span><span class="theme-amount">{currency.format(s.subTotal)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Fee</span><span class="theme-amount">{currency.format(s.totalFee)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Discount</span><span class="theme-amount">-{currency.format(s.totalDiscount)}</span></div>
+        <div class="flex justify-between border-t border-hairline pt-2 font-semibold text-ink"><span>Grand total</span><span class="theme-amount">{currency.format(s.grandTotal)}</span></div>
+        <div class="mt-2 flex justify-between text-success"><span>Paid</span><span class="theme-amount">{currency.format(s.totalPaid)}</span></div>
+        <div class="flex justify-between text-danger"><span>Unpaid</span><span class="theme-amount">{currency.format(s.totalUnpaid)}</span></div>
+         <div class="flex justify-between text-ink-secondary"><span>Refunded</span><span class="theme-amount">{currency.format(s.totalRefunded)}</span></div>
+        <div class="flex justify-between text-ink-secondary"><span>Unrefunded</span><span class="theme-amount">{currency.format(s.totalUnrefunded)}</span></div> 
       </div>
     </div>
   {/if}

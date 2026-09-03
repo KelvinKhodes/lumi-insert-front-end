@@ -1,16 +1,18 @@
 <script>
   import { onMount } from 'svelte';
   import { Link, navigate } from 'svelte-routing';
-  import { Plus, LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import { Plus, LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight, FileDown } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
-  import { getTransactions } from '../api/transactions.js';
+  import { getTransactions, exportTransactionsHistory } from '../api/transactions.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
     import { action, allowed } from '../permission.js';
     import { session } from '../stores/session.js';
+    import { downloadBlob } from '../utils.js';
 
   pageTitle.set('Transactions');
 
   const transactions = useAsyncAction(getTransactions);
+  const exportHistory = useAsyncAction(exportTransactionsHistory);
 
   let page = $state(0);
   const size = 12;
@@ -40,13 +42,22 @@
     load();
   }
 
+  async function exportXLSX() {
+    const blob = await exportHistory.run({ page, size, sortBy: 'createdAt', sortDirection: 'DESC', status: statusFilter || undefined });
+    downloadBlob(blob, `transactions-${new Date().toISOString()}.xlsx`);
+  }
+
   onMount(load);
 </script>
 
 <div class="p-5 md:p-7">
   <div class="mb-5 flex items-center justify-between gap-3">
-    <h1 class="hidden text-[22px] font-semibold text-ink md:block">Transactions</h1>
+    <h1 class="theme-page-title hidden md:block">Transactions</h1>
+    
     <div class="ml-auto flex items-center gap-2">
+      <button type="button" aria-label="Export Transaction History as XLSX" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={exportXLSX}>
+        <FileDown role="presentation" size={14} aria-hidden="true" />
+      </button>
       <select class="sf-input w-auto max-w-[150px]" bind:value={statusFilter} onchange={onStatusChange}>
         <option value="">All statuses</option>
         <option value="PENDING">Pending</option>
@@ -56,7 +67,7 @@
       </select>
       {#if allowed($session?.employee?.role, action.TransactionsWrite)}
       <button class="sf-btn-primary shrink-0" onclick={() => navigate('/transactions/new')}>
-        <Plus size={14} />New transaction
+        <Plus size={14} aria-hidden="true" />New transaction
       </button>
       {/if}
     </div>
@@ -79,11 +90,11 @@
           <li>
             <Link to={`/transactions/${tx.id}`} class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-black/[0.015]">
               <div class="min-w-0">
-                <p class="truncate text-[13.5px] font-medium text-ink">{tx.invoiceId ?? tx.customerName}</p>
-                <p class="truncate text-[12px] text-ink-secondary">{tx.customerName} · {dateFmt.format(new Date(tx.createdAt))}</p>
+                <p class="theme-id truncate text-ink">{tx.invoiceId ?? tx.customerName}</p>
+                <p class="theme-meta truncate">{tx.customerName} · {dateFmt.format(new Date(tx.createdAt))}</p>
               </div>
               <div class="flex shrink-0 items-center gap-3">
-                <span class="font-mono text-[13px] text-ink">{currency.format(tx.grandTotal ?? 0)}</span>
+                <span class="theme-amount text-ink">{currency.format(tx.grandTotal ?? 0)}</span>
                 <span class="rounded-full px-2 py-0.5 text-[11px] font-medium {statusStyle[tx.status] ?? 'bg-black/[0.06] text-ink-secondary'}">
                   {tx.status}
                 </span>

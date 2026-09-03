@@ -40,7 +40,7 @@
       </div> 
       <div class="rounded-lg bg-sky-50 border border-sky-200 p-4 mt-4">
         <h4 class="text-xs font-bold uppercase tracking-wider text-sky-800 mb-2">Demo Credentials</h4>
-        <div class="space-y-1 text-xs sm:text-sm text-sky-950 font-mono">
+        <div class="space-y-1 text-xs sm:text-sm text-sky-950">
           <div>
             <span class="font-sans font-semibold text-gray-700">Lumi:</span> 
             <span class="bg-sky-100 border border-sky-200 px-1.5 py-0.5 rounded text-sky-900">SUPERADMIN</span> | 

@@ -84,7 +84,7 @@
               <span class="truncate text-[13px] font-medium text-ink">{item.name}</span>
               <input class="sf-input !py-1.5 text-[12.5px]" type="number" min="0" placeholder="Price" bind:value={item.price} required />
               <input class="sf-input !py-1.5 text-[12.5px]" type="number" min="1" placeholder="Qty" bind:value={item.quantity} required />
-              <button type="button" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => removeItem(index)} aria-label="Remove">
+              <button type="button" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05] hover:text-danger" onclick={() => removeItem(index)} aria-label="Remove supply item">
                 <Trash2 size={14} />
               </button>
             </div>
@@ -126,10 +126,10 @@
 
       <div class="border-t border-hairline pt-3">
         <div class="flex justify-between text-[12.5px] text-ink-secondary">
-          <span>Subtotal</span><span class="font-mono">{currency.format(subTotal)}</span>
+          <span>Subtotal</span><span class="theme-amount">{currency.format(subTotal)}</span>
         </div>
         <div class="mt-1 flex justify-between text-[14px] font-semibold text-ink">
-          <span>Grand total</span><span class="font-mono">{currency.format(grandTotal)}</span>
+          <span>Grand total</span><span class="theme-amount">{currency.format(grandTotal)}</span>
         </div>
       </div>
 

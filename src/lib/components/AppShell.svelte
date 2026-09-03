@@ -25,7 +25,7 @@
           onclick={() => (sidebarOpen = true)}
           aria-label="Open navigation"
         >
-          <Menu size={18} />
+          <Menu size={18} aria-hidden="true" />
         </button>
         <span class="text-[15px] font-semibold text-ink">{$pageTitle}</span>
       </header>
