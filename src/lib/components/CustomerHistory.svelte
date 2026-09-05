@@ -56,18 +56,18 @@
 </script>
 
 {#if $transactions.loading}
-    <div class="flex justify-center py-16"><LoaderCircle size={22} class="animate-spin text-ink-tertiary" /></div>
+    <div class="flex rounded-tl-none justify-center py-16"><LoaderCircle size={22} class="animate-spin text-ink-tertiary" /></div>
   {:else if $transactions.error}
-    <div class="flex items-center gap-2 rounded-control bg-danger-soft px-4 py-3 text-[13px] text-danger">
+    <div class="flex items-center rounded-tl-none gap-2 rounded-control bg-danger-soft px-4 py-3 text-[13px] text-danger">
       <TriangleAlert size={15} />{$transactions.error.message}
     </div>
   {:else if !$transactions.data?.content?.length}
-    <div class="sf-card flex flex-col items-center justify-center gap-2 py-16 text-center">
+    <div class="sf-card rounded-tl-none flex flex-col items-center justify-center gap-2 py-16 text-center">
       <p class="text-[13.5px] text-ink-secondary">No transactions found.</p>
     </div>
   {:else}
     <!-- desktop table -->
-    <div class="sf-card hidden overflow-hidden md:block">
+    <div class="sf-card rounded-tl-none overflow-hidden overflow-x-auto md:block">
       <table class="w-full text-left text-[13px]">
         <thead>
           <tr class="border-b border-hairline text-[11.5px] uppercase tracking-wide text-ink-secondary">
@@ -96,38 +96,6 @@
         </tbody>
       </table>
     </div>
-
-    <!-- mobile cards -->
-    <!-- <div class="flex flex-col gap-2.5 md:hidden">
-      {#each $transactions.data.content as transaction (transaction.id)}
-        <div class="sf-card p-3.5">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <p class="truncate text-[13.5px] font-medium text-ink">{transaction.name}</p>
-              <p class="text-[12px] text-ink-secondary">{transaction.category?.name ?? 'Uncategorized'}</p>
-            </div>
-            <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium {transaction.isActive ? 'bg-success-soft text-success' : 'bg-black/[0.06] text-ink-secondary'}">
-              {transaction.isActive ? 'Active' : 'Inactive'}
-            </span>
-          </div>
-          <div class="mt-2.5 flex items-center justify-between text-[12.5px]">
-            <span class="theme-amount text-ink">{currency.format(transaction.sellPrice)}</span>
-            <span class="theme-number {transaction.stockQuantity <= transaction.stockMinimum ? 'text-danger' : 'text-ink-secondary'}">
-              {transaction.stockQuantity} in stock
-            </span>
-          </div>
-          <div class="mt-3 flex gap-2">
-            <button class="sf-btn-secondary flex-1 !py-1.5" onclick={() => openEdit(transaction)}>
-              <Pencil size={13} aria-hidden="true" />Edit
-            </button>
-            <button class="sf-btn-secondary flex-1 !py-1.5" onclick={() => onToggle(transaction)} disabled={$toggling.loading}>
-              <Power size={13} aria-hidden="true" class={transaction.isActive ? 'text-danger' : 'text-success'} />
-              {transaction.isActive ? 'Deactivate' : 'Activate'}
-            </button>
-          </div>
-        </div>
-      {/each}
-    </div> -->
 
     <div class="mt-4 flex items-center justify-between">
       <span class="text-[12px] text-ink-secondary">Page {queryPayload.page + 1}</span>
