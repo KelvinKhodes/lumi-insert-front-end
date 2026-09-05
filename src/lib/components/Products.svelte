@@ -50,6 +50,10 @@
     maxPrice: 50000000
   });
 
+  function categoryIdFromUrl() {
+    return new URLSearchParams(window.location.search).get('categoryId') ?? '';
+  }
+
   let modalOpen = $state(false);
   let editingProduct = $state(null);
 
@@ -81,6 +85,12 @@
   function onCategoryChange() {
     queryPayload.page = 0;
     load();
+  }
+
+  function applyFilters() {
+    queryPayload.page = 0;
+    load();
+    modalFilterOpen = false;
   }
 
   function goToPage(delta) {
@@ -124,6 +134,7 @@
   }
 
   onMount(() => {
+    queryPayload.categoryId = categoryIdFromUrl();
     categoriesAction.run({ size: 100 });
     load();
   });
@@ -286,7 +297,7 @@
   open={modalFilterOpen}
   payload={queryPayload}
   onClose={() => (modalFilterOpen = false)} 
+  onApply={applyFilters}
   onReset={resetFilters}
-  load={load}
   categories={$categoriesAction.data?.content ?? []}
 />
