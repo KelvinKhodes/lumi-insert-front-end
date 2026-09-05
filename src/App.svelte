@@ -19,6 +19,7 @@
   import TransactionCreate from './lib/components/TransactionCreate.svelte';
   import TransactionDetail from './lib/components/TransactionDetail.svelte';
     import CustomerDetail from './lib/components/CustomerDetail.svelte';
+    import SupplierDetail from './lib/components/SupplierDetail.svelte';
 
   /**
    * @typedef {Object} Props
@@ -27,7 +28,6 @@
 
   /** @type {Props} */
   let { url = '' } = $props();
-
   let isAuthenticated = $derived(!!$session?.accessToken);
 </script>
 
@@ -47,6 +47,11 @@
       </Route>
       <Route path="/employees"><Employees /></Route>
       <Route path="/suppliers"><Suppliers /></Route>
+      <Route path="/suppliers/:id">
+        {#snippet children({ params })}
+          <SupplierDetail id={params.id} />
+        {/snippet}
+      </Route>
       <Route path="/supplies"><Supplies /></Route>
       <Route path="/supplies/new"><SupplyCreate /></Route>
       <Route path="/supplies/:id" >{#snippet children({ params })}
