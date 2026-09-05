@@ -9,6 +9,7 @@
   import SupplierFormModal from './SupplierFormModal.svelte';
     import { action, allowed } from '../permission.js';
     import { session } from '../stores/session.js';
+    import { Link } from 'svelte-routing';
 
   pageTitle.set('Suppliers');
 
@@ -97,19 +98,23 @@
       <p class="text-[13.5px] text-ink-secondary">No suppliers found.</p>
     </div>
   {:else}
-    <div class="flex flex-col gap-2.5">
+    <div class="sf-card overflow-hidden">
+      <ul class="divide-y divide-hairline">
       {#each $suppliers.data.content as supplier (supplier.id)}
-        <div class="sf-card flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <p class="truncate text-[13.5px] font-medium text-ink">{supplier.name}</p>
-              <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium {supplier.isActive ? 'bg-success-soft text-success' : 'bg-black/[0.06] text-ink-secondary'}">
-                {supplier.isActive ? 'Active' : 'Inactive'}
-              </span>
+        <li>
+          <Link to={`/suppliers/${supplier.id}`} class="flex flex-row min-w-0 py-3 px-4 justify-between items-center gap-3 hover:bg-black/[0.015]">
+            <div>
+              <div class="flex items-center gap-2">
+                <p class="truncate text-[13.5px] font-medium text-ink">{supplier.name}</p>
+                <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium {supplier.isActive ? 'bg-success-soft text-success' : 'bg-black/[0.06] text-ink-secondary'}">
+                  {supplier.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <p class="truncate text-[12px] text-ink-secondary">{supplier.email || supplier.contact}</p>
             </div>
-            <p class="truncate text-[12px] text-ink-secondary">{supplier.email || supplier.contact}</p>
-          </div>
-          <div class="flex items-center gap-4 text-[12px]">
+            <ChevronRight size={15} class="shrink-0 text-ink-tertiary" />
+          </Link>
+          <!-- <div class="flex items-center gap-4 text-[12px]">
             <div class="text-right">
               <p class="theme-number font-medium text-ink">{supplier.totalTransaction ?? 0}</p>
               <p class="text-ink-secondary">Transactions</p>
@@ -124,8 +129,8 @@
             </button>
 
             {/if}
-          </div>
-        </div>
+          </div> -->
+        </li>
       {/each}
     </div>
 
