@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { navigate } from 'svelte-routing';
   import { Plus, LoaderCircle, TriangleAlert, Pencil, Power, ChevronLeft, ChevronRight } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getCategories, activateCategory, deactivateCategory } from '../api/categories.js';
@@ -42,6 +43,10 @@
     modalOpen = true;
   }
 
+  function openProducts(category) {
+    navigate(`/products?categoryId=${encodeURIComponent(category.id)}`);
+  }
+
   async function onToggle(category) {
     await toggling.run(category);
     load();
@@ -82,7 +87,12 @@
   {:else}
     <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
       {#each $categories.data.content as category (category.id)}
-        <div class="sf-card flex items-center justify-between p-3.5">
+        <button
+          type="button"
+          class="sf-card flex w-full items-center justify-between p-3.5 text-left transition-colors hover:bg-black/[0.02]"
+          onclick={() => openProducts(category)}
+          aria-label={`View products in ${category.name}`}
+        >
           <div class="min-w-0">
             <p class="theme-body truncate font-medium">{category.name}</p>
             <p class="theme-meta">{category.totalItems ?? 0} products</p>
@@ -105,7 +115,7 @@
             </button>
             {/if}
           </div>
-        </div>
+        </button>
       {/each}
     </div>
 
