@@ -53,13 +53,13 @@
     </div>
   {:else if $customer.data}
     {@const c = $customer.data}
-    <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+    <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <div class="flex items-center gap-2">
-          <button class="sf-btn-primary disabled:opacity-100 opacity-50 shrink-0" disabled={currentState === 'GENERAL'} onclick={changeState('GENERAL')}>
+        <div class="flex items-center rounded-t-xl overflow-hidden bg-sidebar">
+          <button class="sf-btn-primary rounded-none bg-[rgb(121,121,121)] hover:bg-[rgb(100,100,100)] disabled:opacity-100 opacity-50 shrink-0" disabled={currentState === 'GENERAL'} onclick={changeState('GENERAL')}>
             General
           </button>
-          <button class="sf-btn-primary disabled:opacity-100 opacity-50 shrink-0" disabled={currentState === 'HISTORY'} onclick={changeState('HISTORY')}>
+          <button class="sf-btn-primary rounded-none bg-[rgb(121,121,121)] hover:bg-[rgb(100,100,100)] disabled:opacity-100 opacity-50 shrink-0" disabled={currentState === 'HISTORY'} onclick={changeState('HISTORY')}>
             History
           </button>
           <!-- <button class="sf-btn-primary disabled:opacity-100 opacity-50 shrink-0" disabled={currentState === 'GALLERY'} onclick={changeState('GALLERY')}>
@@ -69,7 +69,7 @@
       </div>
     </div>
     {#if currentState === 'GENERAL'}
-    <div class="sf-card p-4">
+    <div class="sf-card rounded-tl-none p-4">
       <div class="mb-3 flex items-center justify-between">
         <h2 class="text-[13.5px] font-semibold text-ink">General Information</h2> 
         {#if allowed($session?.employee?.role, action.CustomersWrite)}
