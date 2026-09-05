@@ -2,11 +2,12 @@
   import { preventDefault } from 'svelte/legacy';
 
   import { onMount } from 'svelte';
-  import { Plus, Search, LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight, ChevronRight as Arrow } from 'lucide-svelte';
+  import { Plus, Search, LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight, ChevronRight as Arrow, Funnel } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getCustomers } from '../api/customers.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import CustomerFormModal from './CustomerFormModal.svelte';
+  import CustomerFilterModal from './CustomerFilterModal.svelte';
   import { Link, navigate } from 'svelte-routing';
     import { action, allowed } from '../permission.js';
     import { session } from '../stores/session.js';
@@ -15,38 +16,84 @@
 
   const customers = useAsyncAction(getCustomers);
 
-  let page = $state(0);
   const size = 12;
-  let nameQuery = $state('');
-  let isActiveFilter = $state('');
+  let filters = $state({
+    page: 0,
+    name: '',
+    email: '',
+    contact: '',
+    isActive: '',
+    minTotalTransaction: '',
+    maxTotalTransaction: '',
+    minTotalUnpaid: '',
+    maxTotalUnpaid: '',
+    minTotalPaid: '',
+    maxTotalPaid: ''
+  });
 
   let modalOpen = $state(false);
   let editingCustomerId = $state(null);
+  let showFilters = $state(false);
+
+  function numberOrUndefined(value) {
+    return value === '' || value == null ? undefined : Number(value);
+  }
 
   function load() {
     customers.run({
-      page,
+      page: filters.page,
       size,
       sortBy: 'name',
       sortDirection: 'ASC',
-      name: nameQuery || undefined,
-      isActive: isActiveFilter === '' ? undefined : isActiveFilter === 'true'
+      name: filters.name || undefined,
+      email: filters.email || undefined,
+      contact: filters.contact || undefined,
+      isActive: filters.isActive === '' ? undefined : filters.isActive === 'true',
+      minTotalTransaction: numberOrUndefined(filters.minTotalTransaction),
+      maxTotalTransaction: numberOrUndefined(filters.maxTotalTransaction),
+      minTotalUnpaid: numberOrUndefined(filters.minTotalUnpaid),
+      maxTotalUnpaid: numberOrUndefined(filters.maxTotalUnpaid),
+      minTotalPaid: numberOrUndefined(filters.minTotalPaid),
+      maxTotalPaid: numberOrUndefined(filters.maxTotalPaid)
     });
   }
 
   function onSearch() {
-    page = 0;
+    filters.page = 0;
     load();
   }
 
   function onStatusChange() {
-    page = 0;
+    filters.page = 0;
     load();
   }
 
   function goToPage(delta) {
-    page = Math.max(0, page + delta);
+    filters.page = Math.max(0, filters.page + delta);
     load();
+  }
+
+  function applyFilters() {
+    onSearch();
+    showFilters = false;
+  }
+
+  function resetFilters() {
+    filters = {
+      page: 0,
+      name: '',
+      email: '',
+      contact: '',
+      isActive: '',
+      minTotalTransaction: '',
+      maxTotalTransaction: '',
+      minTotalUnpaid: '',
+      maxTotalUnpaid: '',
+      minTotalPaid: '',
+      maxTotalPaid: ''
+    };
+    load();
+    showFilters = false;
   }
 
   function openCreate() {
@@ -62,12 +109,16 @@
     <h1 class="theme-page-title hidden md:block">Customers</h1>
 
     <form onsubmit={preventDefault(onSearch)} class="flex flex-1 flex-wrap items-center gap-2 md:justify-end">
+      <button type="button" aria-label="Toggle advanced filters" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => (showFilters = !showFilters)}>
+        <Funnel size={14} aria-hidden="true" />
+      </button>
+
       <div class="relative flex-1 md:max-w-[220px]">
         <Search size={14} class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-tertiary" />
-        <input class="sf-input pl-8" type="text" placeholder="Search by name" bind:value={nameQuery} />
+        <input class="sf-input pl-8" type="text" placeholder="Search by name" bind:value={filters.name} />
       </div>
 
-      <select class="sf-input w-auto max-w-[140px]" bind:value={isActiveFilter} onchange={onStatusChange}>
+      <select class="sf-input w-auto max-w-[140px]" bind:value={filters.isActive} onchange={onStatusChange}>
         <option value="">All statuses</option>
         <option value="true">Active</option>
         <option value="false">Inactive</option>
@@ -81,6 +132,14 @@
       {/if}
     </form>
   </div>
+
+  <CustomerFilterModal
+    open={showFilters}
+    {filters}
+    onClose={() => (showFilters = false)}
+    onApply={applyFilters}
+    onReset={resetFilters}
+  />
 
   {#if $customers.loading}
     <div class="flex justify-center py-16"><LoaderCircle size={22} class="animate-spin text-ink-tertiary" /></div>
@@ -120,7 +179,7 @@
     </div>
 
     <div class="mt-4 flex items-center justify-between">
-      <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
+      <span class="text-[12px] text-ink-secondary">Page {filters.page + 1}</span>
       <div class="flex gap-2">
         <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$customers.data.first}>
           <ChevronLeft size={14} />
