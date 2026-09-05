@@ -86,11 +86,11 @@
 {/if}
 
 <aside
-  class="fixed inset-y-0 left-0 z-50 w-[230px] shrink-0 -translate-x-full transform bg-sidebar backdrop-blur-sf transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0
+  class="fixed inset-y-0 left-0 z-50 flex h-full w-[230px] shrink-0 -translate-x-full transform flex-col bg-sidebar backdrop-blur-sf transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0
     {open ? 'translate-x-0' : ''}"
 >
-  <div class="flex h-full flex-col border-r border-hairline justify-between p-3">
-    <div>
+  <div class="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden border-r border-hairline p-3">
+    <div class="min-h-0 flex-1 overflow-y-auto">
       <div class="flex items-center justify-between px-1 pb-4 pt-1">
         <div class="flex items-center gap-2">
           <div class="h-6 w-6 rounded-[7px]">
@@ -104,7 +104,7 @@
       </div>
 
       <div>
-        <nav class="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+        <nav class="flex flex-col gap-0.5">
           {#each navItems as item}
             <Link to={item.href} getProps={linkProps} on:click={onClose}>
               <item.icon size={16} strokeWidth={2} />
@@ -112,7 +112,7 @@
             </Link>
           {/each}
         </nav>
-        <nav class="flex flex-1 flex-col gap-0.5 border-t-2 border-gray-200 overflow-y-auto">
+        <nav class="flex flex-col gap-0.5 border-t-2 border-gray-200">
           {#each navDeveloperItems as item} 
             <a class="flex items-center gap-2.5 rounded-control px-3 py-1.5 text-[13px] transition-colors duration-100" target="_blank"  href={item.href}>
               <item.icon size={16} strokeWidth={2} />
@@ -124,11 +124,7 @@
     </div>
     
     
-    
-
-    
-
-    <div class="mt-2 border-t border-hairline pt-3">
+    <div class="flex-none border-t border-hairline pt-1">
       <div class="flex items-center gap-2 rounded-control px-2 py-1.5">
         <div class="flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
           {($session?.employee?.fullname ?? '?').slice(0, 2).toUpperCase()}
