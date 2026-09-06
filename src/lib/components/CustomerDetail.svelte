@@ -10,6 +10,7 @@
   import { getCustomer } from '../api/customers.js';
   import CustomerFormModal from './CustomerFormModal.svelte';
   import CustomerHistory from './CustomerHistory.svelte';
+  import CustomerGallery from './CustomerGallery.svelte';
   import { action, allowed } from '../permission.js';
   import { session } from '../stores/session.js';
 
@@ -62,9 +63,9 @@
           <button class="sf-btn-primary rounded-none bg-[rgb(121,121,121)] hover:bg-[rgb(100,100,100)] disabled:opacity-100 opacity-50 shrink-0" disabled={currentState === 'HISTORY'} onclick={changeState('HISTORY')}>
             History
           </button>
-          <!-- <button class="sf-btn-primary disabled:opacity-100 opacity-50 shrink-0" disabled={currentState === 'GALLERY'} onclick={changeState('GALLERY')}>
+          <button class="sf-btn-primary rounded-none bg-[rgb(121,121,121)] hover:bg-[rgb(100,100,100)] disabled:opacity-100 opacity-50 shrink-0" disabled={currentState === 'GALLERY'} onclick={changeState('GALLERY')}>
             Gallery
-          </button> -->
+          </button>
         </div> 
       </div>
     </div>
@@ -123,11 +124,8 @@
   </div>
   {:else if currentState === 'HISTORY'}
     <CustomerHistory customerId={c.id}/>
-  <!-- {:else if currentState === 'GALLERY'}
-    <div class="sf-card p-4">
-      <h2 class="mb-3 text-[13.5px] font-semibold text-ink">Gallery</h2>
-      <p class="text-[12.5px] text-ink-secondary">Customer gallery will be displayed here.</p>
-    </div> -->
+  {:else if currentState === 'GALLERY'}
+    <CustomerGallery customerId={c.id} pictureUrl={c.pictureUrl} onUploaded={load} />
   {/if}
   {/if}
 </div> 
