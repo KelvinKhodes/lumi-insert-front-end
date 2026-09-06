@@ -5,55 +5,131 @@
     LoaderCircle,
     TriangleAlert, 
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Funnel,
+    FileDown
 
   } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js'; 
   import { useAsyncAction } from '../api/useAsyncAction.js'; 
-  import { getTransactions } from '../api/transactions.js';
-  import { getTransactionPayments } from '../api/transactionPayments.js';
-    import { navigate } from 'svelte-routing';
+  import { getTransactions, exportTransactionsHistory } from '../api/transactions.js';
+  import TransactionFilterModal from './TransactionFilterModal.svelte';
+  import { navigate } from 'svelte-routing';
+  import { downloadBlob } from '../utils.js';
 
   pageTitle.set('transactions');
 
   const transactions = useAsyncAction(getTransactions);
-  const payments = useAsyncAction(getTransactionPayments); 
- 
+  const exportHistory = useAsyncAction(exportTransactionsHistory);
   let {
     customerId = null
   } = $props();
 
   const size = 10; 
-
-  let queryPayload = $state({
-    page: 0,  
-    sortBy: 'createdAt',
-    sortDirection: 'DESC'
-  }); 
+  let filters = $state({
+    page: 0,
+    status: '',
+    minCreatedAt: '',
+    maxCreatedAt: '',
+    minTotalItems: '',
+    maxTotalItems: '',
+    minGrandTotal: '',
+    maxGrandTotal: '',
+    minTotalUnpaid: '',
+    maxTotalUnpaid: '',
+    minTotalPaid: '',
+    maxTotalPaid: ''
+  });
+  let showFilters = $state(false);
    
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
+  function normalizeDateTime(value) {
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 19);
+  }
+
+  function numberOrUndefined(value) {
+    return value === '' || value == null ? undefined : Number(value);
+  }
+
   function load() {
     transactions.run({
-      page: queryPayload.page,
+      page: filters.page,
       size,
-      sortBy: queryPayload.sortBy,
-      sortDirection: queryPayload.sortDirection, 
-      customerId: customerId || undefined
+      sortBy: 'createdAt',
+      sortDirection: 'DESC',
+      customerId: customerId || undefined,
+      status: filters.status || undefined,
+      minCreatedAt: normalizeDateTime(filters.minCreatedAt),
+      maxCreatedAt: normalizeDateTime(filters.maxCreatedAt),
+      minTotalItems: numberOrUndefined(filters.minTotalItems),
+      maxTotalItems: numberOrUndefined(filters.maxTotalItems),
+      minGrandTotal: numberOrUndefined(filters.minGrandTotal),
+      maxGrandTotal: numberOrUndefined(filters.maxGrandTotal),
+      minTotalUnpaid: numberOrUndefined(filters.minTotalUnpaid),
+      maxTotalUnpaid: numberOrUndefined(filters.maxTotalUnpaid),
+      minTotalPaid: numberOrUndefined(filters.minTotalPaid),
+      maxTotalPaid: numberOrUndefined(filters.maxTotalPaid)
     });
 
   }
  
   function goToPage(delta) {
-    queryPayload.page = Math.max(0, queryPayload.page + delta);
+    filters.page = Math.max(0, filters.page + delta);
     load();
-  }  
+  }
+
+  function applyFilters() {
+    filters.page = 0;
+    load();
+    showFilters = false;
+  }
+
+  function resetFilters() {
+    filters = { page: 0, status: '', minCreatedAt: '', maxCreatedAt: '', minTotalItems: '', maxTotalItems: '', minGrandTotal: '', maxGrandTotal: '', minTotalUnpaid: '', maxTotalUnpaid: '', minTotalPaid: '', maxTotalPaid: '' };
+    load();
+    showFilters = false;
+  }
+
+  async function exportXLSX() {
+    const blob = await exportHistory.run({
+      size,
+      sortBy: 'createdAt',
+      sortDirection: 'DESC',
+      customerId: customerId || undefined,
+      status: filters.status || undefined,
+      minCreatedAt: normalizeDateTime(filters.minCreatedAt),
+      maxCreatedAt: normalizeDateTime(filters.maxCreatedAt),
+      minTotalItems: numberOrUndefined(filters.minTotalItems),
+      maxTotalItems: numberOrUndefined(filters.maxTotalItems),
+      minGrandTotal: numberOrUndefined(filters.minGrandTotal),
+      maxGrandTotal: numberOrUndefined(filters.maxGrandTotal),
+      minTotalUnpaid: numberOrUndefined(filters.minTotalUnpaid),
+      maxTotalUnpaid: numberOrUndefined(filters.maxTotalUnpaid),
+      minTotalPaid: numberOrUndefined(filters.minTotalPaid),
+      maxTotalPaid: numberOrUndefined(filters.maxTotalPaid)
+    });
+    downloadBlob(blob, `customer-transactions-${new Date().toISOString()}.xlsx`);
+  }
   
   onMount(() => { 
     load();
   });
 
 </script>
+
+
+
+<TransactionFilterModal
+  open={showFilters}
+  {filters}
+  title="Filter customer transactions"
+  onClose={() => (showFilters = false)}
+  onApply={applyFilters}
+  onReset={resetFilters}
+/>
 
 {#if $transactions.loading}
     <div class="flex rounded-tl-none justify-center py-16"><LoaderCircle size={22} class="animate-spin text-ink-tertiary" /></div>
@@ -77,8 +153,16 @@
             <th class="px-4 py-2.5 font-medium">Discount</th>
             <th class="px-4 py-2.5 font-medium">Subtotal</th>
             <th class="px-4 py-2.5 font-medium">Grandtotal</th>
+
             <th class="px-4 py-2.5 font-medium">Status</th>
-            <th class="px-4 py-2.5"></th>
+            <th class="px-4 py-2.5">
+              <button type="button" aria-label="Export customer transactions as XLSX" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={exportXLSX} disabled={$exportHistory.loading}>
+                <FileDown size={14} aria-hidden="true" />
+              </button>
+              <button type="button" aria-label="Toggle transaction filters" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => (showFilters = !showFilters)}>
+                  <Funnel size={14} aria-hidden="true" />
+                </button>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -98,7 +182,7 @@
     </div>
 
     <div class="mt-4 flex items-center justify-between">
-      <span class="text-[12px] text-ink-secondary">Page {queryPayload.page + 1}</span>
+      <span class="text-[12px] text-ink-secondary">Page {filters.page + 1}</span>
       <div class="flex gap-2">
         <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$transactions.data.first}>
           <ChevronLeft size={14} />
