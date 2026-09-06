@@ -24,6 +24,7 @@
   } from 'lucide-svelte';
   import { session, clearSession } from '../stores/session.js';
   import { logout } from '../api/auth.js';
+  import { cloudinaryAvatarUrl } from '../utils.js';
 
   
   /**
@@ -126,9 +127,13 @@
     
     <div class="flex-none border-t border-hairline pt-1">
       <div class="flex items-center gap-2 rounded-control px-2 py-1.5">
-        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
-          {($session?.employee?.fullname ?? '?').slice(0, 2).toUpperCase()}
-        </div>
+        {#if $session?.employee?.pictureUrl}
+          <img src={cloudinaryAvatarUrl($session.employee.pictureUrl, 96)} alt={`${$session.employee.fullname ?? 'Employee'} profile`} class="h-7 w-7 shrink-0 rounded-full object-cover" />
+        {:else}
+          <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
+            {($session?.employee?.fullname ?? '?').slice(0, 2).toUpperCase()}
+          </div>
+        {/if}
         <div class="min-w-0 flex-1">
           <p class="truncate text-[12.5px] font-medium text-ink">{$session?.employee?.fullname ?? 'Unknown'}</p>
           <p class="truncate text-[11px] text-ink-secondary">{$session?.employee?.role ?? ''}</p>
