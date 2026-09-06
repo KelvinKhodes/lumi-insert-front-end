@@ -4,6 +4,7 @@
   import { pageTitle } from '../stores/pageTitle.js';
   import { getEmployees } from '../api/employees.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
+  import { cloudinaryAvatarUrl } from '../utils.js';
   import EmployeeFormModal from './EmployeeFormModal.svelte';
     import { action, allowed } from '../permission.js';
     import { session } from '../stores/session.js';
@@ -77,9 +78,13 @@
               onclick={() => openEdit(employee.id)}
             >
               <div class="flex min-w-0 items-center gap-3">
-                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
-                  {employee.fullname.slice(0, 2).toUpperCase()}
-                </div>
+                {#if employee.pictureUrl}
+                  <img src={cloudinaryAvatarUrl(employee.pictureUrl, 96)} alt={`${employee.fullname} profile`} class="h-8 w-8 shrink-0 rounded-full object-cover" />
+                {:else}
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
+                    {employee.fullname.slice(0, 2).toUpperCase()}
+                  </div>
+                {/if}
                 <div class="min-w-0">
                   <p class="truncate text-[13.5px] font-medium text-ink">{employee.fullname}</p>
                   <p class="truncate text-[12px] text-ink-secondary">@{employee.username}</p>

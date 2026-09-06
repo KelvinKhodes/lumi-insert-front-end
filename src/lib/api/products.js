@@ -1,7 +1,7 @@
 import { apiRequest } from './client.js';
 
 /**
- * Products — 10/10 endpoints
+ * Products — 11/11 endpoints
  *   GET  /api/products                    → getProducts
  *   POST /api/products                    → createProduct
  *   GET  /api/products/{id}               → getProduct
@@ -9,6 +9,7 @@ import { apiRequest } from './client.js';
  *   POST /api/products/{id}/activate      → activateProduct
  *   POST /api/products/{id}/deactivate    → deactivateProduct
  *   GET  /api/products/{id}/stocks        → getProductStock
+ *   POST /api/products/{id}/pictures      → uploadProductPictures
  *   GET  /api/products/filter             → getProductsByFilter
  *   GET  /api/products/searchName         → searchProductNames
  *   GET  /api/products/statistics/export  → exportProductsStatistics
@@ -66,6 +67,19 @@ export async function deactivateProduct(id) {
  */
 export async function getProductStock(id) {
   return apiRequest(`/api/products/${id}/stocks`, { method: 'GET' });
+}
+
+/**
+ * @param {number|string} id
+ * @param {File[]} files
+ * @returns {Promise<unknown>}
+ */
+export async function uploadProductPictures(id, files) {
+  return apiRequest(`/api/products/${id}/pictures`, {
+    method: 'POST',
+    bodyType: 'multipart',
+    body: { files }
+  });
 }
 
 /**

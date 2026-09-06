@@ -1,22 +1,23 @@
 <script>
   import { onMount } from 'svelte';
   import { Link, navigate } from 'svelte-routing';
-  import { Plus, LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight, FileDown } from 'lucide-svelte';
+  import { Plus, LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight, FileDown, Funnel } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getTransactions, exportTransactionsHistory } from '../api/transactions.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
     import { action, allowed } from '../permission.js';
     import { session } from '../stores/session.js';
     import { downloadBlob } from '../utils.js';
+    import TransactionFilterModal from './TransactionFilterModal.svelte';
 
   pageTitle.set('Transactions');
 
   const transactions = useAsyncAction(getTransactions);
   const exportHistory = useAsyncAction(exportTransactionsHistory);
 
-  let page = $state(0);
   const size = 12;
-  let statusFilter = $state('');
+  let filters = $state({ page: 0, status: '', minCreatedAt: '', maxCreatedAt: '', minTotalItems: '', maxTotalItems: '', minGrandTotal: '', maxGrandTotal: '', minTotalUnpaid: '', maxTotalUnpaid: '', minTotalPaid: '', maxTotalPaid: '' });
+  let showFilters = $state(false);
 
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
   const dateFmt = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -28,22 +29,60 @@
     CANCELLED: 'bg-danger-soft text-danger'
   };
 
+  function normalizeDateTime(value) {
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 19);
+  }
+
+  function numberOrUndefined(value) {
+    return value === '' || value == null ? undefined : Number(value);
+  }
+
   function load() {
-    transactions.run({ page, size, sortBy: 'createdAt', sortDirection: 'DESC', status: statusFilter || undefined });
+    transactions.run({
+      page: filters.page,
+      size,
+      sortBy: 'createdAt',
+      sortDirection: 'DESC',
+      status: filters.status || undefined,
+      minCreatedAt: normalizeDateTime(filters.minCreatedAt),
+      maxCreatedAt: normalizeDateTime(filters.maxCreatedAt),
+      minTotalItems: numberOrUndefined(filters.minTotalItems),
+      maxTotalItems: numberOrUndefined(filters.maxTotalItems),
+      minGrandTotal: numberOrUndefined(filters.minGrandTotal),
+      maxGrandTotal: numberOrUndefined(filters.maxGrandTotal),
+      minTotalUnpaid: numberOrUndefined(filters.minTotalUnpaid),
+      maxTotalUnpaid: numberOrUndefined(filters.maxTotalUnpaid),
+      minTotalPaid: numberOrUndefined(filters.minTotalPaid),
+      maxTotalPaid: numberOrUndefined(filters.maxTotalPaid)
+    });
   }
 
   function onStatusChange() {
-    page = 0;
+    filters.page = 0;
     load();
   }
 
   function goToPage(delta) {
-    page = Math.max(0, page + delta);
+    filters.page = Math.max(0, filters.page + delta);
     load();
   }
 
+  function applyFilters() {
+    filters.page = 0;
+    load();
+    showFilters = false;
+  }
+
+  function resetFilters() {
+    filters = { page: 0, status: '', minCreatedAt: '', maxCreatedAt: '', minTotalItems: '', maxTotalItems: '', minGrandTotal: '', maxGrandTotal: '', minTotalUnpaid: '', maxTotalUnpaid: '', minTotalPaid: '', maxTotalPaid: '' };
+    load();
+    showFilters = false;
+  }
+
   async function exportXLSX() {
-    const blob = await exportHistory.run({ page, size, sortBy: 'createdAt', sortDirection: 'DESC', status: statusFilter || undefined });
+    const blob = await exportHistory.run({ page: filters.page, size, sortBy: 'createdAt', sortDirection: 'DESC', status: filters.status || undefined });
     downloadBlob(blob, `transactions-${new Date().toISOString()}.xlsx`);
   }
 
@@ -55,10 +94,13 @@
     <h1 class="theme-page-title hidden md:block">Transactions</h1>
     
     <div class="ml-auto flex items-center gap-2">
-      <button type="button" aria-label="Export Transaction History as XLSX" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={exportXLSX}>
+    <button type="button" aria-label="Export Transaction History as XLSX" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={exportXLSX}>
         <FileDown role="presentation" size={14} aria-hidden="true" />
       </button>
-      <select class="sf-input w-auto max-w-[150px]" bind:value={statusFilter} onchange={onStatusChange}>
+      <button type="button" aria-label="Toggle advanced filters" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => (showFilters = !showFilters)}>
+        <Funnel size={14} aria-hidden="true" />
+      </button>
+      <select class="sf-input w-auto max-w-[150px]" bind:value={filters.status} onchange={onStatusChange}>
         <option value="">All statuses</option>
         <option value="PENDING">Pending</option>
         <option value="PROCESS">Process</option>
@@ -72,6 +114,8 @@
       {/if}
     </div>
   </div>
+
+  <TransactionFilterModal open={showFilters} {filters} onClose={() => (showFilters = false)} onApply={applyFilters} onReset={resetFilters} />
 
   {#if $transactions.loading}
     <div class="flex justify-center py-16"><LoaderCircle size={22} class="animate-spin text-ink-tertiary" /></div>
@@ -106,7 +150,7 @@
     </div>
 
     <div class="mt-4 flex items-center justify-between">
-      <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
+      <span class="text-[12px] text-ink-secondary">Page {filters.page + 1}</span>
       <div class="flex gap-2">
         <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$transactions.data.first}>
           <ChevronLeft size={14} />

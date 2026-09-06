@@ -1,19 +1,20 @@
 <script>
   import { onMount } from 'svelte';
-  import { Plus, LoaderCircle, TriangleAlert, ChevronRight } from 'lucide-svelte';
+  import { Plus, LoaderCircle, TriangleAlert, ChevronRight, Funnel } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { searchStockCards } from '../api/stockcards.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import StockCardFormModal from './StockCardFormModal.svelte';
+  import StockCardFilterModal from './StockCardFilterModal.svelte';
 
   pageTitle.set('Stock cards');
 
   const stockCards = useAsyncAction(searchStockCards);
 
-  let typeFilter = $state('');
-  let page = $state(0);
+  let filters = $state({ page: 0, productId: '', type: '', minCreatedAt: '', maxCreatedAt: '', sortBy: 'createdAt', sortDirection: 'DESC' });
   const size = 15;
   let modalOpen = $state(false);
+  let showFilters = $state(false);
 
   const typeStyle = {
     CUSTOMER_IN: 'bg-success-soft text-success',
@@ -24,18 +25,45 @@
     DEFECT: 'bg-danger-soft text-danger'
   };
 
+  function normalizeDateTime(value) {
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 19);
+  }
+
   function load() {
-    stockCards.run({ page, size, sortBy: 'createdAt', sortDirection: 'DESC', type: typeFilter || undefined });
+    stockCards.run({
+      page: filters.page,
+      size,
+      sortBy: filters.sortBy || 'createdAt',
+      sortDirection: filters.sortDirection || 'DESC',
+      productId: filters.productId === '' ? undefined : Number(filters.productId),
+      type: filters.type || undefined,
+      minCreatedAt: normalizeDateTime(filters.minCreatedAt),
+      maxCreatedAt: normalizeDateTime(filters.maxCreatedAt)
+    });
   }
 
   function onTypeChange() {
-    page = 0;
+    filters.page = 0;
     load();
   }
 
   function goToPage(delta) {
-    page = Math.max(0, page + delta);
+    filters.page = Math.max(0, filters.page + delta);
     load();
+  }
+
+  function applyFilters() {
+    filters.page = 0;
+    load();
+    showFilters = false;
+  }
+
+  function resetFilters() {
+    filters = { page: 0, productId: '', type: '', minCreatedAt: '', maxCreatedAt: '', sortBy: 'createdAt', sortDirection: 'DESC' };
+    load();
+    showFilters = false;
   }
 
   const dateFmt = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -47,7 +75,10 @@
   <div class="mb-5 flex items-center justify-between gap-3">
     <h1 class="hidden text-[22px] font-semibold text-ink md:block">Stock cards</h1>
     <div class="ml-auto flex items-center gap-2">
-      <select class="sf-input w-auto max-w-[170px]" bind:value={typeFilter} onchange={onTypeChange}>
+      <button type="button" aria-label="Toggle advanced filters" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => (showFilters = !showFilters)}>
+        <Funnel size={14} aria-hidden="true" />
+      </button>
+      <select class="sf-input w-auto max-w-[170px]" bind:value={filters.type} onchange={onTypeChange}>
         <option value="">All types</option>
         <option value="CUSTOMER_IN">Customer in</option>
         <option value="CUSTOMER_OUT">Customer out</option>
@@ -61,6 +92,8 @@
       </button>
     </div>
   </div>
+
+  <StockCardFilterModal open={showFilters} {filters} onClose={() => (showFilters = false)} onApply={applyFilters} onReset={resetFilters} />
 
   {#if $stockCards.loading}
     <div class="flex justify-center py-16"><LoaderCircle size={22} class="animate-spin text-ink-tertiary" /></div>
@@ -93,9 +126,9 @@
     </div>
 
     <div class="mt-4 flex items-center justify-between">
-      <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
+      <span class="text-[12px] text-ink-secondary">Page {filters.page + 1}</span>
       <div class="flex gap-2">
-        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={page === 0}>Prev</button>
+        <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={filters.page === 0}>Prev</button>
         <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(1)} disabled={($stockCards.data.content?.length ?? 0) < size}>Next</button>
       </div>
     </div>

@@ -23,3 +23,15 @@ export function formatCurrency(amount) {
   console.log(res);
   return res;
 }
+
+/**
+ * Applies a Cloudinary face-focused avatar transformation to a delivery URL.
+ * Non-Cloudinary URLs are returned unchanged.
+ * @param {string|null|undefined} url
+ * @param {number} [size=200]
+ */
+export function cloudinaryAvatarUrl(url, size = 200) {
+  if (!url || !url.includes('/image/upload/')) return url ?? '';
+  const transformation = `c_thumb,g_face,h_${size},w_${size}/r_max/f_auto/q_auto`;
+  return url.replace('/image/upload/', `/image/upload/${transformation}/`);
+}
