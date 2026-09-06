@@ -5,6 +5,7 @@
   import Modal from './Modal.svelte';
   import { createEmployee, updateEmployee, getEmployee, resetEmployeePassword, uploadEmployeeProfile, isUsernameTaken } from '../api/employees.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
+  import { cloudinaryAvatarUrl } from '../utils.js';
     import { action, allowed } from '../permission';
     import { session } from '../stores/session';
 
@@ -48,6 +49,7 @@
 
   let newPassword = $state('');
   let profileFile = $state(null);
+  let pictureUrl = $state('');
 
   run(() => {
     if (open) {
@@ -56,12 +58,14 @@
       uploading.reset();
       newPassword = '';
       profileFile = null;
+      pictureUrl = '';
       if (isEdit) {
         detail.run(employeeId).then((data) => {
           username = data.username ?? '';
           fullname = data.fullname ?? '';
           role = data.role ?? 'CASHIER';
           isActive = true;
+          pictureUrl = data.pictureUrl ?? '';
         });
       } else {
         detail.reset();
@@ -186,6 +190,9 @@
             {#if $uploading.error}<p class="mb-2 text-[12px] text-danger">{$uploading.error.message}</p>{/if}
             {#if $uploading.success}<p class="mb-2 flex items-center gap-1 text-[12px] text-success"><Check size={13} />Uploaded.</p>{/if}
             <div class="flex items-center gap-2">
+              {#if pictureUrl && !profileFile}
+                <img src={cloudinaryAvatarUrl(pictureUrl, 96)} alt={`${fullname} profile`} class="h-9 w-9 shrink-0 rounded-full object-cover" />
+              {/if}
               <input type="file" accept="image/*" class="sf-input flex-1 !py-1.5 text-[12px]" onchange={(e) => (profileFile = e.currentTarget.files?.[0] ?? null)} />
               <button type="button" class="sf-btn-secondary shrink-0" onclick={onUploadProfile} disabled={!profileFile || $uploading.loading}>
                 {#if $uploading.loading}<LoaderCircle size={14} class="animate-spin" />{:else}Upload{/if}
