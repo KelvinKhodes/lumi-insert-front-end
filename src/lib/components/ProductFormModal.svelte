@@ -1,9 +1,9 @@
 <script>
   import { run, preventDefault } from 'svelte/legacy';
 
-  import { LoaderCircle, TriangleAlert } from 'lucide-svelte';
+  import { LoaderCircle, TriangleAlert, Check, ImagePlus } from 'lucide-svelte';
   import Modal from './Modal.svelte';
-  import { createProduct, updateProduct } from '../api/products.js';
+  import { createProduct, updateProduct, uploadProductPictures } from '../api/products.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
 
   
@@ -26,6 +26,10 @@
   } = $props();
   
   const saving = useAsyncAction((payload) => (product ? updateProduct(product.id, payload) : createProduct(payload)));
+  const uploading = useAsyncAction((id, files) => uploadProductPictures(id, files));
+
+  const maxImageSize = 10 * 1024 * 1024;
+  const maxImageCount = 5;
  
   let name = $state('');
   let categoryId = $state('');
@@ -33,6 +37,8 @@
   let sellPrice = $state('');
   let stockQuantity = $state('');
   let stockMinimum = $state('');
+  let pictureFiles = $state([]);
+  let imageError = $state('');
 
   let isOpenPrevious = $state(false);
 
@@ -46,13 +52,51 @@
         sellPrice = product?.sellPrice ?? '';
         stockQuantity = '';
         stockMinimum = product?.stockMinimum ?? '';
+        pictureFiles = [];
+        imageError = '';
         
         isOpenPrevious = true;
         saving.reset();
+        uploading.reset();
     } else if (!open) {
       isOpenPrevious = false;
     }
   });
+
+  function onPictureSelected(event) {
+    const files = Array.from(event.currentTarget.files ?? []);
+    if (!files.length) return;
+    if (files.length > maxImageCount) {
+      imageError = `You can upload up to ${maxImageCount} images at a time.`;
+      event.currentTarget.value = '';
+      return;
+    }
+
+    const invalidFile = files.find((file) => !file.type.startsWith('image/'));
+    if (invalidFile) {
+      imageError = `${invalidFile.name} is not an image.`;
+      event.currentTarget.value = '';
+      return;
+    }
+
+    const oversizedFile = files.find((file) => file.size > maxImageSize);
+    if (oversizedFile) {
+      imageError = `${oversizedFile.name} exceeds the 10 MB image limit.`;
+      event.currentTarget.value = '';
+      return;
+    }
+
+    imageError = '';
+    uploading.reset();
+    pictureFiles = files;
+    event.currentTarget.value = '';
+  }
+
+  async function onUploadPicture() {
+    if (!pictureFiles.length || !isEdit) return;
+    await uploading.run(product.id, pictureFiles);
+    pictureFiles = [];
+  }
 
   async function onSubmit() { 
     const payload = {
@@ -64,7 +108,12 @@
     };
     if (!isEdit) payload.stockQuantity = Number(stockQuantity);
 
-    await saving.run(payload);
+    const savedProduct = await saving.run(payload);
+    const productId = savedProduct?.id ?? product?.id;
+    if (pictureFiles.length && productId) {
+      await uploading.run(productId, pictureFiles);
+    }
+    pictureFiles = [];
     onSaved();
     onClose();
   }
@@ -124,10 +173,39 @@
       </p>
     {/if}
 
+    {#if isEdit}
+      <div class="mt-1 flex flex-col gap-2 border-t border-hairline pt-4">
+        <p class="mb-1 flex items-center gap-1.5 text-[12.5px] font-medium text-ink-secondary">
+          <ImagePlus size={13} />Product image
+        </p>
+        {#if $uploading.error}<p class="mb-1 text-[12px] text-danger" role="alert">{$uploading.error.message}</p>{/if}
+        {#if $uploading.success}<p class="mb-1 flex items-center gap-1 text-[12px] text-success"><Check size={13} />Uploaded.</p>{/if}
+        <div class="flex items-center gap-2">
+          <input id="p-picture" type="file" accept="image/*" multiple class="sf-input flex-1 !py-1.5 text-[12px]" onchange={onPictureSelected} />
+          <button type="button" class="sf-btn-secondary shrink-0" onclick={onUploadPicture} disabled={!pictureFiles.length || $uploading.loading}>
+            {#if $uploading.loading}<LoaderCircle size={14} class="animate-spin" />{:else}Upload{/if}
+          </button>
+        </div>
+        {#if imageError}<p class="text-[12px] text-danger" role="alert">{imageError}</p>{/if}
+        {#if pictureFiles.length}<p class="text-[12px] text-ink-secondary">{pictureFiles.length} image{pictureFiles.length === 1 ? '' : 's'} selected.</p>{/if}
+        <p class="text-[11px] text-ink-tertiary">Up to 5 images, maximum 10 MB each.</p>
+      </div>
+    {:else}
+      <div class="flex flex-col gap-2">
+        <label for="p-picture-new" class="mb-1 flex items-center gap-1.5 text-[12.5px] font-medium text-ink-secondary">
+          <ImagePlus size={13} />Product image
+        </label>
+        <input id="p-picture-new" type="file" accept="image/*" multiple class="sf-input !py-1.5 text-[12px]" onchange={onPictureSelected} />
+        {#if imageError}<p class="text-[12px] text-danger" role="alert">{imageError}</p>{/if}
+        {#if pictureFiles.length}<p class="text-[12px] text-ink-secondary">{pictureFiles.length} image{pictureFiles.length === 1 ? '' : 's'} selected.</p>{/if}
+        <p class="text-[11px] text-ink-tertiary">Up to 5 images, maximum 10 MB each.</p>
+      </div>
+    {/if}
+
     <div class="mt-2 flex justify-end gap-2">
       <button type="button" class="sf-btn-secondary" onclick={onClose}>Cancel</button>
-      <button type="submit" class="sf-btn-primary" disabled={$saving.loading}>
-        {#if $saving.loading}
+      <button type="submit" class="sf-btn-primary" disabled={$saving.loading || $uploading.loading}>
+        {#if $saving.loading || $uploading.loading}
           <LoaderCircle size={14} class="animate-spin" />
         {/if}
         {isEdit ? 'Save changes' : 'Create product'}
