@@ -1,15 +1,32 @@
 <script>
   import { onMount } from 'svelte';
-  import { LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import { LoaderCircle, TriangleAlert, ChevronLeft, ChevronRight, Funnel, FileDown } from 'lucide-svelte';
   import { useAsyncAction } from '../api/useAsyncAction.js';
-  import { getSupplies } from '../api/supplies.js';
-    import { navigate } from 'svelte-routing';
+  import { getSupplies, exportSuppliesHistory } from '../api/supplies.js';
+  import SupplyFilterModal from './SupplyFilterModal.svelte';
+  import { navigate } from 'svelte-routing';
+  import { downloadBlob } from '../utils.js';
 
   let { supplierId = null } = $props();
 
   const supplies = useAsyncAction(getSupplies);
+  const exportHistory = useAsyncAction(exportSuppliesHistory);
   const size = 10;
-  let page = $state(0);
+  let filters = $state({
+    page: 0,
+    status: '',
+    minCreatedAt: '',
+    maxCreatedAt: '',
+    minTotalItems: '',
+    maxTotalItems: '',
+    minGrandTotal: '',
+    maxGrandTotal: '',
+    minTotalUnpaid: '',
+    maxTotalUnpaid: '',
+    minTotalPaid: '',
+    maxTotalPaid: ''
+  });
+  let showFilters = $state(false);
   const currency = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -17,23 +34,86 @@
   });
   const dateFmt = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
+  function normalizeDateTime(value) {
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 19);
+  }
+
+  function numberOrUndefined(value) {
+    return value === '' || value == null ? undefined : Number(value);
+  }
+
   function load() {
     supplies.run({
-      page,
+      page: filters.page,
       size,
       sortBy: 'createdAt',
       sortDirection: 'DESC',
-      supplierId: supplierId || undefined
+      supplierId: supplierId || undefined,
+      status: filters.status || undefined,
+      minCreatedAt: normalizeDateTime(filters.minCreatedAt),
+      maxCreatedAt: normalizeDateTime(filters.maxCreatedAt),
+      minTotalItems: numberOrUndefined(filters.minTotalItems),
+      maxTotalItems: numberOrUndefined(filters.maxTotalItems),
+      minGrandTotal: numberOrUndefined(filters.minGrandTotal),
+      maxGrandTotal: numberOrUndefined(filters.maxGrandTotal),
+      minTotalUnpaid: numberOrUndefined(filters.minTotalUnpaid),
+      maxTotalUnpaid: numberOrUndefined(filters.maxTotalUnpaid),
+      minTotalPaid: numberOrUndefined(filters.minTotalPaid),
+      maxTotalPaid: numberOrUndefined(filters.maxTotalPaid)
     });
   }
 
   function goToPage(delta) {
-    page = Math.max(0, page + delta);
+    filters.page = Math.max(0, filters.page + delta);
     load();
+  }
+
+  function applyFilters() {
+    filters.page = 0;
+    load();
+    showFilters = false;
+  }
+
+  function resetFilters() {
+    filters = { page: 0, status: '', minCreatedAt: '', maxCreatedAt: '', minTotalItems: '', maxTotalItems: '', minGrandTotal: '', maxGrandTotal: '', minTotalUnpaid: '', maxTotalUnpaid: '', minTotalPaid: '', maxTotalPaid: '' };
+    load();
+    showFilters = false;
+  }
+
+  async function exportXLSX() {
+    const blob = await exportHistory.run({
+      size,
+      sortBy: 'createdAt',
+      sortDirection: 'DESC',
+      supplierId: supplierId || undefined,
+      status: filters.status || undefined,
+      minCreatedAt: normalizeDateTime(filters.minCreatedAt),
+      maxCreatedAt: normalizeDateTime(filters.maxCreatedAt),
+      minTotalItems: numberOrUndefined(filters.minTotalItems),
+      maxTotalItems: numberOrUndefined(filters.maxTotalItems),
+      minGrandTotal: numberOrUndefined(filters.minGrandTotal),
+      maxGrandTotal: numberOrUndefined(filters.maxGrandTotal),
+      minTotalUnpaid: numberOrUndefined(filters.minTotalUnpaid),
+      maxTotalUnpaid: numberOrUndefined(filters.maxTotalUnpaid),
+      minTotalPaid: numberOrUndefined(filters.minTotalPaid),
+      maxTotalPaid: numberOrUndefined(filters.maxTotalPaid)
+    });
+    downloadBlob(blob, `supplier-supplies-${new Date().toISOString()}.xlsx`);
   }
 
   onMount(load);
 </script>
+
+<SupplyFilterModal
+  open={showFilters}
+  {filters}
+  showSupplierId={false}
+  onClose={() => (showFilters = false)}
+  onApply={applyFilters}
+  onReset={resetFilters}
+/>
 
 {#if $supplies.loading}
   <div class="flex justify-center py-16"><LoaderCircle size={22} class="animate-spin text-ink-tertiary" /></div>
@@ -55,6 +135,14 @@
           <th class="px-4 py-2.5 font-medium">Items</th>
           <th class="px-4 py-2.5 font-medium">Grand total</th>
           <th class="px-4 py-2.5 font-medium">Status</th>
+          <th class="px-4 py-2.5 font-medium">
+            <button type="button" aria-label="Export supplier supplies as XLSX" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={exportXLSX} disabled={$exportHistory.loading}>
+              <FileDown size={14} aria-hidden="true" />
+            </button>
+            <button type="button" aria-label="Toggle supply filters" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => (showFilters = !showFilters)}>
+                <Funnel size={14} aria-hidden="true" />
+            </button>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -72,7 +160,7 @@
   </div>
 
   <div class="mt-4 flex items-center justify-between">
-    <span class="text-[12px] text-ink-secondary">Page {page + 1}</span>
+    <span class="text-[12px] text-ink-secondary">Page {filters.page + 1}</span>
     <div class="flex gap-2">
       <button class="sf-btn-secondary !px-2.5" onclick={() => goToPage(-1)} disabled={$supplies.data.first}>
         <ChevronLeft size={14} />
