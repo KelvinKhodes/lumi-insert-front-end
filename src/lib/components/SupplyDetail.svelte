@@ -3,12 +3,13 @@
 
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
-  import { ArrowLeft, LoaderCircle, TriangleAlert, FileDown, Ban, RotateCcw, Wallet, Check } from 'lucide-svelte';
+  import { ArrowLeft, LoaderCircle, TriangleAlert, FileDown, Ban, RotateCcw, Wallet, Check, Images } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getSupply, cancelSupply, refundSupplyItem, exportSupplyPdf } from '../api/supplies.js';
   import { getSupplyPayments, createSupplyPayment, refundSupplyPayment } from '../api/supplyPayments.js';
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import { downloadBlob } from '../utils.js';
+  import PaymentPicturesModal from './PaymentPicturesModal.svelte';
     import { action, allowed } from '../permission.js';
     import { session } from '../stores/session.js';
 
@@ -27,6 +28,8 @@
   let paymentAmount = $state('');
   let paymentFiles = $state(null);
   let showPaymentForm = $state(false);
+  let paymentPictures = $state([]);
+  let paymentPicturesOpen = $state(false);
 
   const currency = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
   const dateFmt = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -94,6 +97,11 @@
       // error state already surfaced via $paying.error below
     }
   } 
+
+  function openPaymentPictures(payment) {
+    paymentPictures = Array.isArray(payment.pictureUrl) ? payment.pictureUrl : [];
+    paymentPicturesOpen = true;
+  }
 
   onMount(load);
   run(() => {
@@ -200,9 +208,16 @@
               {#each $payments.data.content as payment (payment.id)}
                 <div class="flex items-center justify-between py-2 text-[13px]">
                   <span class="text-ink-secondary">{payment.paymentFrom} → {payment.paymentTo}</span>
-                  <span class="theme-amount {payment.isForRefund ? 'text-danger' : 'text-success'}">
-                    {payment.isForRefund ? '-' : '+'}{currency.format(payment.totalPayment)}
-                  </span>
+                  <div class="flex items-center gap-2">
+                    {#if payment.pictureUrl?.length}
+                      <button type="button" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => openPaymentPictures(payment)} aria-label="View payment pictures">
+                        <Images size={14} aria-hidden="true" />
+                      </button>
+                    {/if}
+                    <span class="theme-amount {payment.isForRefund ? 'text-danger' : 'text-success'}">
+                      {payment.isForRefund ? '-' : '+'}{currency.format(payment.totalPayment)}
+                    </span>
+                  </div>
                 </div>
               {/each}
             </div>
@@ -225,3 +240,5 @@
     </div>
   {/if}
 </div>
+
+<PaymentPicturesModal open={paymentPicturesOpen} pictureUrl={paymentPictures} onClose={() => (paymentPicturesOpen = false)} />

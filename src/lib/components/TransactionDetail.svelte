@@ -3,7 +3,7 @@
 
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
-  import { ArrowLeft, LoaderCircle, TriangleAlert, FileDown, Ban, RotateCcw, Wallet, Check, Trash2, PlayCircle, TicketMinus } from 'lucide-svelte';
+  import { ArrowLeft, LoaderCircle, TriangleAlert, FileDown, Ban, RotateCcw, Wallet, Check, Trash2, PlayCircle, TicketMinus, Images } from 'lucide-svelte';
   import { pageTitle } from '../stores/pageTitle.js';
   import { getTransaction, processTransaction, cancelTransaction, exportTransactionPdf } from '../api/transactions.js';
   import {
@@ -17,6 +17,7 @@
   import { useAsyncAction } from '../api/useAsyncAction.js';
   import { downloadBlob } from '../utils.js';
   import ProductPicker from './ProductPicker.svelte';
+  import PaymentPicturesModal from './PaymentPicturesModal.svelte';
   import { getProductStock } from '../api/products.js'; 
     import { action, allowed } from '../permission.js';
     import { session } from '../stores/session.js';
@@ -42,6 +43,8 @@
   let paymentAmount = $state('');
   let paymentFiles = $state(null);
   let showPaymentForm = $state(false);
+  let paymentPictures = $state([]);
+  let paymentPicturesOpen = $state(false);
   
   let productStockData = $state(new Map()); // Map of productId to stock quantity 
 
@@ -141,6 +144,11 @@
     } catch {
       // error state already surfaced via $paying.error below
     }
+  }
+
+  function openPaymentPictures(payment) {
+    paymentPictures = Array.isArray(payment.pictureUrl) ? payment.pictureUrl : [];
+    paymentPicturesOpen = true;
   }
 
   onMount(load);
@@ -287,9 +295,16 @@
               {#each $payments.data.content as payment (payment.id)}
                 <div class="flex items-center justify-between py-2 text-[13px]">
                   <span class="text-ink-secondary">{payment.paymentFrom} → {payment.paymentTo}</span>
-                  <span class="theme-amount {payment.isForRefund ? 'text-danger' : 'text-success'}">
-                    {payment.isForRefund ? '-' : '+'}{currency.format(payment.totalPayment)}
-                  </span>
+                  <div class="flex items-center gap-2">
+                    {#if payment.pictureUrl?.length}
+                      <button type="button" class="rounded-control p-1.5 text-ink-secondary hover:bg-black/[0.05]" onclick={() => openPaymentPictures(payment)} aria-label="View payment pictures">
+                        <Images size={14} aria-hidden="true" />
+                      </button>
+                    {/if}
+                    <span class="theme-amount {payment.isForRefund ? 'text-danger' : 'text-success'}">
+                      {payment.isForRefund ? '-' : '+'}{currency.format(payment.totalPayment)}
+                    </span>
+                  </div>
                 </div>
               {/each}
             </div>
@@ -312,3 +327,5 @@
     </div>
   {/if}
 </div>
+
+<PaymentPicturesModal open={paymentPicturesOpen} pictureUrl={paymentPictures} onClose={() => (paymentPicturesOpen = false)} />
