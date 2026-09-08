@@ -20,12 +20,6 @@
     onClose = () => {}, 
   } = $props();
 
-//   const mockPictureUrl = [
-//     'https://down-id.img.susercontent.com/file/id-11134207-7r98u-lruya7n4863d6f',
-//     'https://down-id.img.susercontent.com/file/sg-11134201-23020-jnvhdhidy9mvdf',
-//     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZr3kOMKn69JJkI-8eWzQIUWRofGVzrqvfSl4hTukFj0xuGdi_UKDCxGne&s=10'
-//   ]; 
-  
   let currentIndex = $state(0);
 
   let translateX = $derived(-(currentIndex * 100) + '%'); 
@@ -52,7 +46,7 @@
             <button class="embla__prev" onclick={() => currentIndex--} disabled={currentIndex === 0}>
                 <ChevronLeft size={20} />
             </button>
-            <button class="embla__next" onclick={() => currentIndex++} disabled={currentIndex === mockPictureUrl.length - 1}>
+            <button class="embla__next" onclick={() => currentIndex++} disabled={currentIndex === product.pictureUrl.length - 1}>
                 <ChevronRight size={20} />
             </button>
         </div>
